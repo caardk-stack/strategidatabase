@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)file:///Users/carolineaar/Downloads/index_3.html -->
+<html lang="no"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategidatabase</title>
+<style>
+  :root {
+    --shell: #F5F0E3;
+    --shell-deep: #EFE8D4;
+    --card: #FBF8F0;
+    --gold: #E8D9A8;
+    --gold-deep: #C9AE6A;
+    --navy: #1F3350;
+    --navy-soft: #4A5C78;
+    --muted: #8B8570;
+    --line: rgba(31,51,80,0.10);
+    --line-strong: rgba(201,174,106,0.55);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--shell);
+    color: var(--navy);
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--navy);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .club-name { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-deep); font-weight: 700; margin: 0 0 3px; }
+  .app-title { font-size: 24px; font-weight: 700; margin: 0; }
+  .role-switch { display: flex; gap: 6px; background: var(--shell-deep); padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
+  .role-switch button { font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 6px; border: none; background: transparent; color: var(--navy-soft); cursor: pointer; }
+  .role-switch button.active { background: var(--navy); color: var(--shell); }
+
+  nav.tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  nav.tabs button { font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--card); color: var(--navy-soft); cursor: pointer; }
+  nav.tabs button.active { background: var(--navy); color: var(--shell); border-color: var(--navy); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: 12px; }
+  .card-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .card-row .t-name { font-size: 15px; font-weight: 700; margin: 0; }
+  .card-row .t-meta { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+  .chevron { color: var(--muted); font-size: 13px; transition: transform 0.15s; }
+  .card.open .chevron { transform: rotate(90deg); }
+  .card-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .card.open .card-detail { display: block; }
+
+  .field-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .field-row label { font-size: 12px; color: var(--muted); width: 110px; flex-shrink: 0; }
+  .field-row input, .field-row select, .field-row textarea {
+    flex: 1; font-family: inherit; font-size: 13.5px; padding: 7px 10px;
+    border: 1px solid var(--line-strong); border-radius: 5px; background: var(--shell); color: var(--navy);
+  }
+  .field-row textarea { min-height: 50px; resize: vertical; }
+
+  .btn { font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-primary { background: var(--navy); color: var(--shell); }
+  .btn-secondary { background: var(--gold); color: var(--navy); }
+  .btn-danger { background: transparent; color: var(--muted); text-decoration: underline; font-weight: 400; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+
+  .add-row {
+    border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--muted); cursor: pointer; text-align: center;
+  }
+  .add-row:hover { background: var(--shell-deep); }
+
+  .players-list { margin-top: 10px; }
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .player-tile {
+    position: relative;
+    background: var(--shell);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 10px 8px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .player-tile:hover { border-color: var(--line-strong); }
+  .player-tile .p-number { font-size: 11px; color: var(--gold-deep); font-weight: 700; }
+  .player-tile .p-name { font-size: 12.5px; font-weight: 600; margin: 2px 0; line-height: 1.25; }
+  .player-tile .p-position { font-size: 10.5px; color: var(--muted); }
+  .player-tile .key-star {
+    position: absolute; top: 5px; right: 6px; font-size: 12px; color: var(--gold-deep);
+  }
+  .import-url-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .import-url-row input { flex: 1; font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--shell); color: var(--navy); }
+  .import-status { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+  .player-detail-fields .field-row textarea { min-height: 44px; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 999px; background: var(--line-strong);
+    position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.15s;
+  }
+  .toggle-switch.on { background: var(--gold-deep); }
+  .toggle-switch .knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--card); transition: left 0.15s;
+  }
+  .toggle-switch.on .knob { left: 20px; }
+  .toggle-label { font-size: 13px; }
+
+  .empty { font-size: 13px; color: var(--muted); font-style: italic; padding: 10px 0; }
+
+  /* Oversikt */
+  .overview-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+  .overview-grid .card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-deep); margin: 0 0 10px; }
+  .next-match-name { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .next-match-date { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+  .note-item { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .note-item:last-child { border-bottom: none; }
+  .note-item .note-team { color: var(--gold-deep); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  @media (max-width: 640px) { .overview-grid { grid-template-columns: 1fr; } }
+
+  .my-team-card { margin-bottom: 14px; border: 1px solid var(--line-strong); }
+  .my-team-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .my-team-header h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-deep); margin: 0; }
+  .my-team-name { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .match-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .match-row:last-child { border-bottom: none; }
+  .match-row .match-opponent { font-size: 14px; font-weight: 700; }
+  .match-row .match-date { font-size: 12px; color: var(--muted); }
+  .match-tag { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; font-weight: 700; text-transform: uppercase; }
+  .match-tag.upcoming { background: var(--gold); color: var(--navy); }
+  .match-tag.played { background: var(--shell-deep); color: var(--muted); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(31,51,80,0.45);
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--card); border-radius: 10px; padding: 1.5rem; max-width: 380px; width: 100%; }
+
+  /* Playbook */
+  .playbook-switch { display: flex; gap: 6px; margin-bottom: 14px; }
+  .playbook-switch button { font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--card); color: var(--navy-soft); cursor: pointer; }
+  .playbook-switch button.active { background: var(--navy); color: var(--shell); border-color: var(--navy); }
+
+  .playbook-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .playbook-board-col { flex: 1; min-width: 320px; }
+  .playbook-controls { width: 240px; }
+  .board-container { position: relative; width: 100%; max-width: 480px; aspect-ratio: 20/13; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; touch-action: none; }
+  .board-container svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .dot {
+    position: absolute; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; cursor: grab; user-select: none;
+    transform: translate(-50%, -50%); touch-action: none;
+  }
+  .dot:active { cursor: grabbing; }
+
+  .preset-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .preset-list .preset-btn { display: flex; justify-content: space-between; align-items: center; text-align: left; }
+  .preset-btn-name { flex: 1; }
+  .save-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  .footer-note { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 2.5rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="app-header">
+    <div>
+      <p class="club-name">Din håndballklubb</p>
+      <h1 class="app-title">Strategidatabase</h1>
+    </div>
+    <div class="role-switch">
+      <button class="active" id="btn-admin">Admin</button>
+      <button id="btn-player">Spiller</button>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="active" data-tab="overview">Oversikt</button>
+    <button data-tab="teams">Motstanderlag</button>
+    <button data-tab="playbook">Playbook</button>
+  </nav>
+
+  <!-- OVERSIKT-PANEL -->
+  <div class="panel active" id="panel-overview">
+    <div class="card my-team-card" id="myTeamCard">
+      <div class="my-team-header">
+        <h3>Mitt lag</h3>
+        <span>
+          <span class="my-team-name" id="myTeamName">Nykøbing Falster Håndbold</span>
+          <span id="editMyTeamBtn" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;margin-left:8px;">endre</span>
+        </span>
+      </div>
+      <div id="myTeamMatches"><p class="empty">Kunne ikke hente kampoversikt akkurat nå. Dette krever at appen er deployet med kalender-tilkoblingen aktiv (fungerer ikke lokalt uten server). <span class="edit-my-team" style="text-decoration:underline;cursor:pointer;">Endre kalenderoppsett</span></p></div>
+    </div>
+    <div class="overview-grid">
+      <div class="card">
+        <h3>Neste kamp (motstanderlag)</h3>
+        <div id="nextMatchBlock"><p class="empty">Ingen kommende kamp satt.</p><div class="add-row" id="editNextMatchRow">+ Sett neste kamp</div></div>
+      </div>
+      <div class="card">
+        <h3>Siste taktikknotater</h3>
+        <div id="latestNotesBlock"><p class="empty">Ingen taktikknotater lagt inn ennå.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MITT LAG-OPPSETT (popup ved første gangs bruk) -->
+  <div class="modal-overlay" id="myTeamModal">
+    <div class="modal-box">
+      <h3 style="margin:0 0 4px;font-size:16px;">Sett opp «Mitt lag»</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Lim inn kalenderlenken for laget deres fra Tophåndbold sin klubkalender.</p>
+      <div class="field-row"><label>Lagnavn</label><input type="text" id="myTeamNameInput" placeholder="f.eks. Nykøbing F. Håndboldklub"></div>
+      <div class="field-row"><label>Kalenderlenke</label><input type="text" id="myTeamCalendarInput" placeholder="Lim inn kalenderlenke her"></div>
+      <p style="font-size:11px;color:var(--muted);margin:6px 0 0;">Finn lenken på <a href="https://tophaandbold.dk/klub-kalender" target="_blank" style="color:var(--gold-deep);">tophaandbold.dk/klub-kalender</a> → velg liga og lag → «Android eller Google Kalender» → kopier lenken som starter med calendar.google.com</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="saveMyTeamBtn">Lagre</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOTSTANDERLAG-PANEL -->
+  <div class="panel" id="panel-teams">
+    <!-- NYTT MOTSTANDERLAG-POPUP -->
+    <div class="modal-overlay" id="newTeamModal">
+      <div class="modal-box">
+        <h3 style="margin:0 0 4px;font-size:16px;">Nytt motstanderlag</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Resten av detaljene legger du til på lagets side etterpå.</p>
+        <div class="field-row"><label>Lagnavn *</label><input type="text" id="newTeamNameInput" placeholder="f.eks. IK Nordstjernen"></div>
+        <p id="newTeamError" style="font-size:12px;color:#a34a2d;margin:4px 0 0;display:none;">Lagnavn må fylles ut.</p>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="cancelNewTeamBtn">Avbryt</button>
+          <button class="btn btn-primary" id="saveNewTeamBtn">Opprett lag</button>
+        </div>
+      </div>
+    </div>
+    <div id="teamsList"><div class="card " data-id="t1788342089346"><div class="card-row team-toggle"><div><p class="t-name">Team Esbjerg</p><p class="t-meta">0 spillere · ingen formasjon satt</p></div><span class="chevron">›</span></div><div class="card-detail"><div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="Team Esbjerg"></div><div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="" placeholder="f.eks. 6-0 forsvar"></div><div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="" placeholder="f.eks. 6. september 2026"></div><div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes"></textarea></div><p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p><div class="players-list"><div class="import-url-row"><input type="text" class="import-url-input" placeholder="Lim inn Tophåndbold-lenke, f.eks. https://tophaandbold.dk/tophaandbold-theme/teams/view/31/5"><button class="btn btn-secondary import-players-btn">Hent tropp</button></div><p class="import-status" style="display:none;"></p><p class="empty">Ingen spillere lagt inn ennå.</p></div><div class="add-row add-player-row" style="margin-top:8px;">+ Legg til spiller manuelt</div><div class="btn-row"><button class="btn btn-danger delete-team-btn">Slett lag</button><button class="btn btn-primary save-team-btn">Lagre</button></div></div></div></div>
+    <div class="add-row" id="addTeamRow" style="display: block;">+ Legg til motstanderlag</div>
+
+    <!-- SPILLERDETALJ-POPUP -->
+    <div class="modal-overlay" id="playerDetailModal">
+      <div class="modal-box">
+        <h3 id="playerDetailName" style="margin:0 0 4px;font-size:16px;"></h3>
+        <p id="playerDetailMeta" style="font-size:12.5px;color:var(--muted);margin:0 0 14px;"></p>
+        <div class="player-detail-fields">
+          <div class="field-row"><label>Styrker</label><textarea id="playerStrengthsInput" placeholder="F.eks. sterkt skudd fra 9m"></textarea></div>
+          <div class="field-row"><label>Svakheter</label><textarea id="playerWeaknessesInput" placeholder="F.eks. svak i forsvar mot gjennombrudd"></textarea></div>
+          <div class="field-row"><label>Foretrukket retning</label><input type="text" id="playerDirectionInput" placeholder="F.eks. venstre, høyre, midtstilt"></div>
+          <div class="toggle-row">
+            <div class="toggle-switch" id="keyPlayerToggle"><div class="knob"></div></div>
+            <span class="toggle-label">Nøkkelspiller</span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="deletePlayerBtn">Slett spiller</button>
+          <button class="btn btn-secondary" id="cancelPlayerDetailBtn">Lukk</button>
+          <button class="btn btn-primary" id="savePlayerDetailBtn">Lagre</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYBOOK-PANEL -->
+  <div class="panel" id="panel-playbook">
+    <div class="playbook-switch">
+      <button class="active" id="btn-defense">Forsvar</button>
+      <button id="btn-attack">Angrep</button>
+    </div>
+    <div class="playbook-wrap">
+      <div class="playbook-board-col">
+        <div class="board-container" id="boardContainer">
+          <svg viewBox="0 0 400 260" preserveAspectRatio="none">
+            <rect x="0" y="0" width="400" height="260" fill="#FBF8F0"></rect>
+            <rect x="10" y="10" width="380" height="240" fill="none" stroke="#1F3350" stroke-width="2"></rect>
+            <line x1="10" y1="130" x2="390" y2="130" stroke="#1F3350" stroke-width="1"></line>
+            <path d="M 10 90 A 40 40 0 0 1 10 170" fill="none" stroke="#1F3350" stroke-width="1.5"></path>
+            <path d="M 390 90 A 40 40 0 0 0 390 170" fill="none" stroke="#1F3350" stroke-width="1.5"></path>
+            <path d="M 10 65 A 65 65 0 0 1 10 195" fill="none" stroke="#C9AE6A" stroke-width="1" stroke-dasharray="4,3"></path>
+            <path d="M 390 65 A 65 65 0 0 0 390 195" fill="none" stroke="#C9AE6A" stroke-width="1" stroke-dasharray="4,3"></path>
+            <rect x="4" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
+            <rect x="388" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
+          </svg>
+          <div id="dotsLayer"><div class="dot" data-id="p0" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 20%; top: 21.1538%;">1</div><div class="dot" data-id="p1" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 37.5%; top: 32.6923%;">2</div><div class="dot" data-id="p2" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 50%; top: 25%;">3</div><div class="dot" data-id="p3" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 62.5%; top: 32.6923%;">4</div><div class="dot" data-id="p4" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 80%; top: 21.1538%;">5</div><div class="dot" data-id="p5" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 50%; top: 15.3846%;">6</div></div>
+        </div>
+        <p class="save-note" id="boardSaveNote"></p>
+      </div>
+      <div class="playbook-controls">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;" id="presetListLabel">Lagrede forsvarsmønstre</p>
+        <div class="preset-list" id="presetList"><p class="empty" style="padding:4px 0;">Ingen mønstre lagret ennå.</p></div>
+        <div class="add-row" id="addPresetRow" style="margin-bottom: 10px; display: block;">+ Nytt mønster</div>
+        <button class="btn btn-secondary" id="resetBoardBtn" style="width:100%;">Nullstill posisjoner</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Lokal lagring aktiv — kobles til delt database senere</p>
+</div>
+
+<script>
+/* ============================================================
+   DATALAG — isolert her for enkel senere Firebase-kobling.
+   ============================================================ */
+const DataStore = {
+  async getTeams() {
+    const raw = localStorage.getItem('teams');
+    return raw ? JSON.parse(raw) : [];
+  },
+  async saveTeams(teams) {
+    localStorage.setItem('teams', JSON.stringify(teams));
+  },
+  async getPresets(category) {
+    const raw = localStorage.getItem('presets_' + category);
+    return raw ? JSON.parse(raw) : null;
+  },
+  async savePresets(category, presets) {
+    localStorage.setItem('presets_' + category, JSON.stringify(presets));
+  },
+  async getActivePresetId(category) {
+    return localStorage.getItem('activePreset_' + category) || null;
+  },
+  async setActivePresetId(category, id) {
+    localStorage.setItem('activePreset_' + category, id);
+  },
+  async getNextMatch() {
+    const raw = localStorage.getItem('nextMatch');
+    return raw ? JSON.parse(raw) : null;
+  },
+  async saveNextMatch(match) {
+    localStorage.setItem('nextMatch', JSON.stringify(match));
+  }
+};
+/* ============================================================ */
+
+let isAdmin = true;
+let teams = [];
+let openTeamId = null;
+let playbookCategory = 'defense';
+let presets = { defense: [], attack: [] };
+let activePresetId = { defense: null, attack: null };
+let boardPositions = [];
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function defaultPositions() {
+  const xs = [80, 150, 200, 250, 320, 200];
+  const ysDefense = [55, 85, 65, 85, 55, 40];
+  const ysAttack = [230, 200, 220, 200, 230, 245];
+  const ys = playbookCategory === 'defense' ? ysDefense : ysAttack;
+  const positions = [];
+  for (let i = 0; i < 6; i++) {
+    positions.push({ id: 'p' + i, label: String(i + 1), x: xs[i], y: ys[i] });
+  }
+  return positions;
+}
+
+/* ---------- Rolle-bytte ---------- */
+document.getElementById('btn-admin').addEventListener('click', () => setRole(true));
+document.getElementById('btn-player').addEventListener('click', () => setRole(false));
+function setRole(admin) {
+  isAdmin = admin;
+  document.getElementById('btn-admin').classList.toggle('active', admin);
+  document.getElementById('btn-player').classList.toggle('active', !admin);
+  renderTeams();
+  renderPresetList();
+  renderDots();
+  document.getElementById('addPresetRow').style.display = isAdmin ? 'block' : 'none';
+}
+
+/* ---------- Faner ---------- */
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'overview') renderOverview();
+    if (btn.dataset.tab === 'playbook') { renderPresetList(); renderDots(); }
+  });
+});
+
+/* ---------- Oversikt ---------- */
+async function renderOverview() {
+  const match = await DataStore.getNextMatch();
+  const nextMatchBlock = document.getElementById('nextMatchBlock');
+  if (match && match.teamId) {
+    const team = teams.find(t => t.id === match.teamId);
+    nextMatchBlock.innerHTML =
+      '<p class="next-match-name">' + escapeHtml(team ? team.name : 'Ukjent lag') + '</p>' +
+      '<p class="next-match-date">' + escapeHtml(match.date || '') + '</p>' +
+      (isAdmin ? '<div class="add-row" id="editNextMatchRow">Endre neste kamp</div>' : '');
+  } else {
+    nextMatchBlock.innerHTML = '<p class="empty">Ingen kommende kamp satt.</p>' +
+      (isAdmin ? '<div class="add-row" id="editNextMatchRow">+ Sett neste kamp</div>' : '');
+  }
+  const editRow = document.getElementById('editNextMatchRow');
+  if (editRow) editRow.addEventListener('click', setNextMatch);
+
+  const notesBlock = document.getElementById('latestNotesBlock');
+  const withNotes = teams.filter(t => t.notes && t.notes.trim());
+  if (!withNotes.length) {
+    notesBlock.innerHTML = '<p class="empty">Ingen taktikknotater lagt inn ennå.</p>';
+  } else {
+    notesBlock.innerHTML = withNotes.slice(0, 5).map(t =>
+      '<div class="note-item"><span class="note-team">' + escapeHtml(t.name) + '</span><br>' + escapeHtml(t.notes) + '</div>'
+    ).join('');
+  }
+}
+
+async function setNextMatch() {
+  if (!teams.length) { alert('Legg til minst ett motstanderlag først.'); return; }
+  const names = teams.map((t, i) => (i + 1) + '. ' + t.name).join('\n');
+  const choice = prompt('Velg motstanderlag (skriv tall):\n' + names);
+  const idx = parseInt(choice, 10) - 1;
+  if (isNaN(idx) || !teams[idx]) return;
+  const date = prompt('Dato/tid for kampen (fri tekst):') || '';
+  await DataStore.saveNextMatch({ teamId: teams[idx].id, date });
+  renderOverview();
+}
+
+/* ---------- Motstanderlag ---------- */
+async function loadTeams() {
+  teams = await DataStore.getTeams();
+  renderTeams();
+}
+
+function renderTeams() {
+  const container = document.getElementById('teamsList');
+  const addRow = document.getElementById('addTeamRow');
+  addRow.style.display = isAdmin ? 'block' : 'none';
+
+  if (!teams.length) {
+    container.innerHTML = '<p class="empty">Ingen motstanderlag lagt inn ennå.</p>';
+    return;
+  }
+
+  container.innerHTML = teams.map(team => {
+    const open = team.id === openTeamId;
+    return '<div class="card ' + (open ? 'open' : '') + '" data-id="' + team.id + '">' +
+      '<div class="card-row team-toggle">' +
+        '<div><p class="t-name">' + escapeHtml(team.name || 'Uten navn') + '</p>' +
+        '<p class="t-meta">' + (team.players ? team.players.length : 0) + ' spillere · ' + escapeHtml(team.formation || 'ingen formasjon satt') + '</p></div>' +
+        '<span class="chevron">›</span>' +
+      '</div>' +
+      '<div class="card-detail">' + renderTeamDetail(team) + '</div>' +
+    '</div>';
+  }).join('');
+
+  container.querySelectorAll('.team-toggle').forEach(el => {
+    el.addEventListener('click', () => {
+      const card = el.closest('.card');
+      const id = card.dataset.id;
+      openTeamId = openTeamId === id ? null : id;
+      renderTeams();
+    });
+  });
+
+  if (isAdmin) attachTeamEditHandlers();
+}
+
+function renderTeamDetail(team) {
+  if (isAdmin) {
+    return '<div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="' + escapeHtml(team.name||'') + '"></div>' +
+      '<div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="' + escapeHtml(team.formation||'') + '" placeholder="f.eks. 6-0 forsvar"></div>' +
+      '<div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="' + escapeHtml(team.nextMatchDate||'') + '" placeholder="f.eks. 6. september 2026"></div>' +
+      '<div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes">' + escapeHtml(team.notes||'') + '</textarea></div>' +
+      '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
+      '<div class="players-list">' + renderPlayersEdit(team) + '</div>' +
+      '<div class="add-row add-player-row" style="margin-top:8px;">+ Legg til spiller manuelt</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-danger delete-team-btn">Slett lag</button>' +
+        '<button class="btn btn-primary save-team-btn">Lagre</button>' +
+      '</div>';
+  } else {
+    return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation||'—') + '</p></div>' +
+      '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate||'—') + '</p></div>' +
+      '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes||'—') + '</p></div>' +
+      '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
+      '<div class="players-list">' + renderPlayersView(team) + '</div>';
+  }
+}
+
+function renderPlayersEdit(team) {
+  const players = team.players || [];
+  const importRow = '<div class="import-url-row">' +
+    '<input type="text" class="import-url-input" placeholder="Lim inn Tophåndbold-lenke, f.eks. https://tophaandbold.dk/tophaandbold-theme/teams/view/31/5">' +
+    '<button class="btn btn-secondary import-players-btn">Hent tropp</button>' +
+    '</div><p class="import-status" style="display:none;"></p>';
+  if (!players.length) return importRow + '<p class="empty">Ingen spillere lagt inn ennå.</p>';
+  return importRow + '<div class="players-grid">' + players.map((p, i) => renderPlayerTile(p, i)).join('') + '</div>';
+}
+
+function renderPlayersView(team) {
+  const players = team.players || [];
+  if (!players.length) return '<p class="empty">Ingen spillere lagt inn.</p>';
+  return '<div class="players-grid">' + players.map((p, i) => renderPlayerTile(p, i)).join('') + '</div>';
+}
+
+function renderPlayerTile(p, idx) {
+  const star = p.keyPlayer ? '<span class="key-star">★</span>' : '';
+  return '<div class="player-tile" data-idx="' + idx + '">' + star +
+    '<p class="p-number">#' + escapeHtml(p.number || '?') + '</p>' +
+    '<p class="p-name">' + escapeHtml(p.name || 'Uten navn') + '</p>' +
+    '<p class="p-position">' + escapeHtml(p.position || '') + '</p>' +
+  '</div>';
+}
+
+function attachTeamEditHandlers() {
+  document.querySelectorAll('.save-team-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const card = btn.closest('.card');
+      const id = card.dataset.id;
+      const team = teams.find(t => t.id === id);
+      team.name = card.querySelector('.edit-name').value;
+      team.formation = card.querySelector('.edit-formation').value;
+      team.nextMatchDate = card.querySelector('.edit-nextmatch').value;
+      team.notes = card.querySelector('.edit-notes').value;
+      await DataStore.saveTeams(teams);
+      renderTeams();
+    });
+  });
+
+  document.querySelectorAll('.delete-team-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const card = btn.closest('.card');
+      const id = card.dataset.id;
+      teams = teams.filter(t => t.id !== id);
+      openTeamId = null;
+      await DataStore.saveTeams(teams);
+      renderTeams();
+    });
+  });
+
+  document.querySelectorAll('.add-player-row').forEach(row => {
+    row.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const card = row.closest('.card');
+      const id = card.dataset.id;
+      const team = teams.find(t => t.id === id);
+      const name = prompt('Spillernavn:');
+      if (!name) return;
+      const number = prompt('Draktnummer:') || '';
+      const position = prompt('Posisjon (f.eks. høyre back):') || '';
+      team.players = team.players || [];
+      team.players.push({ name, number, position, strengths: '', weaknesses: '', preferredDirection: '', keyPlayer: false });
+      await DataStore.saveTeams(teams);
+      renderTeams();
+    });
+  });
+
+  document.querySelectorAll('.import-players-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const card = btn.closest('.card');
+      const id = card.dataset.id;
+      const input = card.querySelector('.import-url-input');
+      const statusEl = card.querySelector('.import-status');
+      const url = input.value.trim();
+      if (!url) { alert('Lim inn en Tophåndbold-lenke først.'); return; }
+
+      statusEl.style.display = 'block';
+      statusEl.textContent = 'Henter spillertropp…';
+      try {
+        const res = await fetch('/api/spillertropp?url=' + encodeURIComponent(url));
+        if (!res.ok) throw new Error('Henting feilet');
+        const data = await res.json();
+        if (!data.players || !data.players.length) {
+          statusEl.textContent = 'Fant ingen spillere på siden. Sjekk at lenken er riktig.';
+          return;
+        }
+        const team = teams.find(t => t.id === id);
+        team.players = data.players.map(p => ({
+          number: p.number, name: p.name, position: p.position,
+          strengths: '', weaknesses: '', preferredDirection: '', keyPlayer: false
+        }));
+        await DataStore.saveTeams(teams);
+        statusEl.textContent = data.players.length + ' spillere hentet.';
+        renderTeams();
+      } catch (err) {
+        statusEl.textContent = 'Kunne ikke hente spillertropp. Dette krever at appen er deployet (fungerer ikke lokalt uten server).';
+      }
+    });
+  });
+
+  document.querySelectorAll('.player-tile').forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = tile.closest('.card');
+      const teamId = card.dataset.id;
+      const idx = parseInt(tile.dataset.idx, 10);
+      openPlayerDetail(teamId, idx);
+    });
+  });
+}
+
+document.getElementById('addTeamRow').addEventListener('click', () => {
+  document.getElementById('newTeamNameInput').value = '';
+  document.getElementById('newTeamError').style.display = 'none';
+  document.getElementById('newTeamModal').classList.add('show');
+  document.getElementById('newTeamNameInput').focus();
+});
+
+document.getElementById('cancelNewTeamBtn').addEventListener('click', () => {
+  document.getElementById('newTeamModal').classList.remove('show');
+});
+
+document.getElementById('saveNewTeamBtn').addEventListener('click', async () => {
+  const name = document.getElementById('newTeamNameInput').value.trim();
+  if (!name) {
+    document.getElementById('newTeamError').style.display = 'block';
+    return;
+  }
+
+  const newTeam = { id: 't' + Date.now(), name, formation: '', nextMatchDate: '', notes: '', players: [] };
+  teams.push(newTeam);
+  openTeamId = newTeam.id;
+  await DataStore.saveTeams(teams);
+  document.getElementById('newTeamModal').classList.remove('show');
+  renderTeams();
+
+  // Send brukeren rett til det nye lagets side (utvidet kort)
+  setTimeout(() => {
+    const el = document.querySelector('.card[data-id="' + newTeam.id + '"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+});
+
+/* ---------- Spillerdetalj-popup ---------- */
+let currentPlayerContext = null; // { teamId, idx }
+let keyPlayerToggleState = false;
+
+function openPlayerDetail(teamId, idx) {
+  const team = teams.find(t => t.id === teamId);
+  const player = team.players[idx];
+  currentPlayerContext = { teamId, idx };
+
+  document.getElementById('playerDetailName').textContent = '#' + (player.number || '?') + ' ' + (player.name || 'Uten navn');
+  document.getElementById('playerDetailMeta').textContent = player.position || '';
+  document.getElementById('playerStrengthsInput').value = player.strengths || '';
+  document.getElementById('playerWeaknessesInput').value = player.weaknesses || '';
+  document.getElementById('playerDirectionInput').value = player.preferredDirection || '';
+
+  keyPlayerToggleState = !!player.keyPlayer;
+  document.getElementById('keyPlayerToggle').classList.toggle('on', keyPlayerToggleState);
+
+  const readOnly = !isAdmin;
+  ['playerStrengthsInput', 'playerWeaknessesInput', 'playerDirectionInput'].forEach(id => {
+    document.getElementById(id).disabled = readOnly;
+  });
+  document.getElementById('savePlayerDetailBtn').style.display = isAdmin ? 'inline-block' : 'none';
+  document.getElementById('deletePlayerBtn').style.display = isAdmin ? 'inline-block' : 'none';
+
+  document.getElementById('playerDetailModal').classList.add('show');
+}
+
+document.getElementById('keyPlayerToggle').addEventListener('click', () => {
+  if (!isAdmin) return;
+  keyPlayerToggleState = !keyPlayerToggleState;
+  document.getElementById('keyPlayerToggle').classList.toggle('on', keyPlayerToggleState);
+});
+
+document.getElementById('cancelPlayerDetailBtn').addEventListener('click', () => {
+  document.getElementById('playerDetailModal').classList.remove('show');
+});
+
+document.getElementById('savePlayerDetailBtn').addEventListener('click', async () => {
+  if (!currentPlayerContext) return;
+  const { teamId, idx } = currentPlayerContext;
+  const team = teams.find(t => t.id === teamId);
+  const player = team.players[idx];
+  player.strengths = document.getElementById('playerStrengthsInput').value.trim();
+  player.weaknesses = document.getElementById('playerWeaknessesInput').value.trim();
+  player.preferredDirection = document.getElementById('playerDirectionInput').value.trim();
+  player.keyPlayer = keyPlayerToggleState;
+  await DataStore.saveTeams(teams);
+  document.getElementById('playerDetailModal').classList.remove('show');
+  renderTeams();
+});
+
+document.getElementById('deletePlayerBtn').addEventListener('click', async () => {
+  if (!currentPlayerContext) return;
+  const { teamId, idx } = currentPlayerContext;
+  const team = teams.find(t => t.id === teamId);
+  team.players.splice(idx, 1);
+  await DataStore.saveTeams(teams);
+  document.getElementById('playerDetailModal').classList.remove('show');
+  renderTeams();
+});
+
+/* ---------- Playbook ---------- */
+document.getElementById('btn-defense').addEventListener('click', () => switchCategory('defense'));
+document.getElementById('btn-attack').addEventListener('click', () => switchCategory('attack'));
+
+async function switchCategory(category) {
+  playbookCategory = category;
+  document.getElementById('btn-defense').classList.toggle('active', category === 'defense');
+  document.getElementById('btn-attack').classList.toggle('active', category === 'attack');
+  document.getElementById('presetListLabel').textContent =
+    category === 'defense' ? 'Lagrede forsvarsmønstre' : 'Lagrede angrepsmønstre';
+  await loadPresetsForCategory();
+}
+
+async function loadPresetsForCategory() {
+  const saved = await DataStore.getPresets(playbookCategory);
+  presets[playbookCategory] = saved || [];
+  activePresetId[playbookCategory] = await DataStore.getActivePresetId(playbookCategory);
+
+  if (presets[playbookCategory].length && !activePresetId[playbookCategory]) {
+    activePresetId[playbookCategory] = presets[playbookCategory][0].id;
+    await DataStore.setActivePresetId(playbookCategory, activePresetId[playbookCategory]);
+  }
+
+  loadActiveBoardPositions();
+  renderPresetList();
+  renderDots();
+}
+
+function loadActiveBoardPositions() {
+  const list = presets[playbookCategory];
+  const activeId = activePresetId[playbookCategory];
+  const active = list.find(p => p.id === activeId);
+  boardPositions = active ? active.positions : defaultPositions();
+}
+
+function renderPresetList() {
+  const list = document.getElementById('presetList');
+  const items = presets[playbookCategory];
+  const activeId = activePresetId[playbookCategory];
+
+  if (!items.length) {
+    list.innerHTML = '<p class="empty" style="padding:4px 0;">Ingen mønstre lagret ennå.</p>';
+    return;
+  }
+
+  list.innerHTML = items.map(p =>
+    '<div class="preset-btn btn ' + (p.id === activeId ? 'btn-primary' : 'btn-secondary') + '" data-id="' + p.id + '">' +
+      '<span class="preset-btn-name">' + escapeHtml(p.name) + '</span>' +
+      (isAdmin ? '<span class="delete-preset" style="font-size:11px;opacity:0.7;margin-left:8px;">✕</span>' : '') +
+    '</div>'
+  ).join('');
+
+  list.querySelectorAll('.preset-btn').forEach(el => {
+    el.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('delete-preset')) {
+        e.stopPropagation();
+        const id = el.dataset.id;
+        presets[playbookCategory] = presets[playbookCategory].filter(p => p.id !== id);
+        await DataStore.savePresets(playbookCategory, presets[playbookCategory]);
+        if (activePresetId[playbookCategory] === id) {
+          activePresetId[playbookCategory] = presets[playbookCategory][0] ? presets[playbookCategory][0].id : null;
+          await DataStore.setActivePresetId(playbookCategory, activePresetId[playbookCategory] || '');
+        }
+        loadActiveBoardPositions();
+        renderPresetList();
+        renderDots();
+        return;
+      }
+      const id = el.dataset.id;
+      activePresetId[playbookCategory] = id;
+      await DataStore.setActivePresetId(playbookCategory, id);
+      loadActiveBoardPositions();
+      renderPresetList();
+      renderDots();
+    });
+  });
+}
+
+document.getElementById('addPresetRow').addEventListener('click', async () => {
+  const name = prompt('Navn på nytt ' + (playbookCategory === 'defense' ? 'forsvarsmønster' : 'angrepsmønster') + ':');
+  if (!name) return;
+  const newPreset = { id: 'pr' + Date.now(), name, positions: defaultPositions() };
+  presets[playbookCategory].push(newPreset);
+  activePresetId[playbookCategory] = newPreset.id;
+  await DataStore.savePresets(playbookCategory, presets[playbookCategory]);
+  await DataStore.setActivePresetId(playbookCategory, newPreset.id);
+  loadActiveBoardPositions();
+  renderPresetList();
+  renderDots();
+});
+
+function renderDots() {
+  const layer = document.getElementById('dotsLayer');
+  layer.innerHTML = '';
+  const dotColor = playbookCategory === 'defense' ? '#1F3350' : '#C9AE6A';
+  const textColor = playbookCategory === 'defense' ? '#F5F0E3' : '#1F3350';
+  boardPositions.forEach(pos => {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = dotColor;
+    dot.style.color = textColor;
+    dot.textContent = pos.label;
+    dot.style.left = (pos.x / 400 * 100) + '%';
+    dot.style.top = (pos.y / 260 * 100) + '%';
+    dot.dataset.id = pos.id;
+    if (isAdmin) makeDraggable(dot, pos);
+    layer.appendChild(dot);
+  });
+}
+
+function makeDraggable(dot, pos) {
+  let dragging = false;
+  const container = document.getElementById('boardContainer');
+
+  function startDrag() { dragging = true; }
+  function moveDrag(clientX, clientY) {
+    if (!dragging) return;
+    const rect = container.getBoundingClientRect();
+    let xPct = ((clientX - rect.left) / rect.width) * 100;
+    let yPct = ((clientY - rect.top) / rect.height) * 100;
+    xPct = Math.max(2, Math.min(98, xPct));
+    yPct = Math.max(2, Math.min(98, yPct));
+    dot.style.left = xPct + '%';
+    dot.style.top = yPct + '%';
+    pos.x = xPct / 100 * 400;
+    pos.y = yPct / 100 * 260;
+  }
+  async function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    const activeId = activePresetId[playbookCategory];
+    const preset = presets[playbookCategory].find(p => p.id === activeId);
+    if (preset) {
+      preset.positions = boardPositions;
+      await DataStore.savePresets(playbookCategory, presets[playbookCategory]);
+    }
+    const note = document.getElementById('boardSaveNote');
+    note.textContent = 'Posisjon lagret';
+    setTimeout(() => { note.textContent = ''; }, 1200);
+  }
+
+  dot.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endDrag);
+  dot.addEventListener('touchstart', startDrag, { passive: true });
+  window.addEventListener('touchmove', (e) => { if (dragging) moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  window.addEventListener('touchend', endDrag);
+}
+
+document.getElementById('resetBoardBtn').addEventListener('click', async () => {
+  boardPositions = defaultPositions();
+  const activeId = activePresetId[playbookCategory];
+  const preset = presets[playbookCategory].find(p => p.id === activeId);
+  if (preset) {
+    preset.positions = boardPositions;
+    await DataStore.savePresets(playbookCategory, presets[playbookCategory]);
+  }
+  renderDots();
+});
+
+/* ---------- Mitt lag ---------- */
+document.getElementById('editMyTeamBtn').addEventListener('click', () => {
+  const raw = localStorage.getItem('myTeam');
+  if (raw) {
+    const myTeam = JSON.parse(raw);
+    document.getElementById('myTeamNameInput').value = myTeam.name || '';
+    document.getElementById('myTeamCalendarInput').value = myTeam.calendarId || '';
+  }
+  document.getElementById('myTeamModal').classList.add('show');
+});
+
+async function initMyTeam() {
+  const raw = localStorage.getItem('myTeam');
+  const myTeam = raw ? JSON.parse(raw) : null;
+
+  if (!myTeam || !myTeam.calendarId) {
+    document.getElementById('myTeamModal').classList.add('show');
+    return;
+  }
+
+  document.getElementById('myTeamName').textContent = myTeam.name || '';
+  await loadMyTeamMatches(myTeam.calendarId);
+}
+
+function extractCalendarId(input) {
+  // Godtar enten en full lenke (...?cid=ID) eller en ren kalender-ID limt inn direkte
+  const trimmed = input.trim();
+  const cidMatch = trimmed.match(/[?&]cid=([^&]+)/);
+  if (cidMatch) return decodeURIComponent(cidMatch[1]);
+  return trimmed; // anta at det limte er selve ID-en
+}
+
+document.getElementById('saveMyTeamBtn').addEventListener('click', async () => {
+  const name = document.getElementById('myTeamNameInput').value.trim();
+  const calendarInput = document.getElementById('myTeamCalendarInput').value.trim();
+  if (!name || !calendarInput) { alert('Fyll ut både lagnavn og kalenderlenke.'); return; }
+  const calendarId = extractCalendarId(calendarInput);
+  localStorage.setItem('myTeam', JSON.stringify({ name, calendarId }));
+  document.getElementById('myTeamModal').classList.remove('show');
+  document.getElementById('myTeamName').textContent = name;
+  await loadMyTeamMatches(calendarId);
+});
+
+async function loadMyTeamMatches(calendarId) {
+  const block = document.getElementById('myTeamMatches');
+  block.innerHTML = '<p class="empty">Henter kampoversikt…</p>';
+  try {
+    const res = await fetch('/api/kalender?calendarId=' + encodeURIComponent(calendarId));
+    if (!res.ok) throw new Error('Kunne ikke hente kalender');
+    const data = await res.json();
+    renderMyTeamMatches(data.events || []);
+  } catch (err) {
+    block.innerHTML = '<p class="empty">Kunne ikke hente kampoversikt akkurat nå. ' +
+      'Dette krever at appen er deployet med kalender-tilkoblingen aktiv (fungerer ikke lokalt uten server). ' +
+      '<span class="edit-my-team" style="text-decoration:underline;cursor:pointer;">Endre kalenderoppsett</span></p>';
+    const editLink = block.querySelector('.edit-my-team');
+    if (editLink) editLink.addEventListener('click', () => document.getElementById('myTeamModal').classList.add('show'));
+  }
+}
+
+function renderMyTeamMatches(events) {
+  const block = document.getElementById('myTeamMatches');
+  if (!events.length) {
+    block.innerHTML = '<p class="empty">Ingen kamper funnet i kalenderen.</p>';
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = events.filter(e => e.date >= today).slice(0, 3);
+  const played = events.filter(e => e.date < today).slice(-3).reverse();
+
+  let html = '';
+  upcoming.forEach(e => {
+    html += '<div class="match-row"><div><p class="match-opponent">' + escapeHtml(e.summary) + '</p>' +
+      '<p class="match-date">' + escapeHtml(e.date) + (e.location ? ' · ' + escapeHtml(e.location) : '') + '</p></div>' +
+      '<span class="match-tag upcoming">Kommende</span></div>';
+  });
+  played.forEach(e => {
+    html += '<div class="match-row"><div><p class="match-opponent">' + escapeHtml(e.summary) + '</p>' +
+      '<p class="match-date">' + escapeHtml(e.date) + '</p></div>' +
+      '<span class="match-tag played">Spilt</span></div>';
+  });
+  block.innerHTML = html || '<p class="empty">Ingen kamper å vise.</p>';
+}
+
+/* ---------- Init ---------- */
+async function init() {
+  await loadTeams();
+  await loadPresetsForCategory();
+  await renderOverview();
+  await initMyTeam();
+  document.getElementById('addPresetRow').style.display = isAdmin ? 'block' : 'none';
+  window.addEventListener('resize', renderDots);
+}
+init();
+</script>
+
+
+
+</body></html>
