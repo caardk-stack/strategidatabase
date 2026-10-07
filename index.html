@@ -394,6 +394,8 @@ let clubSettings = CLUB_CONFIG; // erstattes av DataStore.getClubSettings() i in
 let isAdmin = true;
 let teams = [];
 let openTeamId = null;
+let editingTeamId = null; // laget som står i redigeringsskjema (maks ett om gangen)
+let teamDraft = null;     // ulagret tekst i skjemaet, overlever ny tegning av listen
 let playbookCategory = 'defense';
 let presets = { defense: [], attack: [] };
 let activePresetId = { defense: null, attack: null };
@@ -517,6 +519,9 @@ function renderTeams() {
     el.addEventListener('click', () => {
       const card = el.closest('.card');
       const id = card.dataset.id;
+      // Både å lukke kortet og å åpne et annet lukker kortet som redigeres
+      if (!confirmDiscardTeamChanges()) return;
+      stopEditingTeam();
       openTeamId = openTeamId === id ? null : id;
       renderTeams();
     });
@@ -525,34 +530,68 @@ function renderTeams() {
   if (isAdmin) attachTeamEditHandlers();
 }
 
+/* Redigeringstilstand: tekstfeltene lagres i teamDraft mens man skriver, og skrives
+   til laget først ved «Lagre». Spillerendringer lagres fortsatt med en gang. */
+const TEAM_TEXT_FIELDS = ['name', 'formation', 'nextMatchDate', 'notes'];
+
+function startEditingTeam(team) {
+  editingTeamId = team.id;
+  teamDraft = { importUrl: '' };
+  TEAM_TEXT_FIELDS.forEach(f => { teamDraft[f] = team[f] || ''; });
+}
+
+function stopEditingTeam() {
+  editingTeamId = null;
+  teamDraft = null;
+}
+
+function hasUnsavedTeamChanges() {
+  const team = editingTeamId && teams.find(t => t.id === editingTeamId);
+  if (!team) return false;
+  return TEAM_TEXT_FIELDS.some(f => teamDraft[f] !== (team[f] || ''));
+}
+
+// Returnerer true hvis det er greit å forlate skjemaet (ingen endringer, eller brukeren godtar å forkaste dem).
+function confirmDiscardTeamChanges() {
+  if (!hasUnsavedTeamChanges()) return true;
+  const team = teams.find(t => t.id === editingTeamId);
+  return confirm('Du har ulagrede endringer i «' + (team.name || 'laget') + '». Vil du forkaste dem?');
+}
+
 function renderTeamDetail(team) {
-  if (isAdmin) {
-    return '<div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="' + escapeHtml(team.name) + '"></div>' +
-      '<div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="' + escapeHtml(team.formation) + '" placeholder="f.eks. 6-0 forsvar"></div>' +
-      '<div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="' + escapeHtml(team.nextMatchDate) + '" placeholder="f.eks. 6. september 2026"></div>' +
-      '<div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes">' + escapeHtml(team.notes) + '</textarea></div>' +
+  if (isAdmin && team.id === editingTeamId) {
+    return '<div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name draft-field" data-field="name" value="' + escapeHtml(teamDraft.name) + '"></div>' +
+      '<div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation draft-field" data-field="formation" value="' + escapeHtml(teamDraft.formation) + '" placeholder="f.eks. 6-0 forsvar"></div>' +
+      '<div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch draft-field" data-field="nextMatchDate" value="' + escapeHtml(teamDraft.nextMatchDate) + '" placeholder="f.eks. 6. september 2026"></div>' +
+      '<div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes draft-field" data-field="notes">' + escapeHtml(teamDraft.notes) + '</textarea></div>' +
       '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
-      '<div class="players-list">' + renderPlayersEdit(team) + '</div>' +
+      '<div class="players-list">' + renderPlayersEdit(team, teamDraft.importUrl) + '</div>' +
       '<div class="add-row add-player-row" style="margin-top:8px;">+ Legg til spiller manuelt</div>' +
       '<div class="btn-row">' +
         '<span class="save-status" role="status" aria-live="polite"></span>' +
         '<button class="btn btn-danger delete-team-btn">Slett lag</button>' +
+        '<button class="btn btn-secondary cancel-edit-team-btn">Avbryt</button>' +
         '<button class="btn btn-primary save-team-btn">Lagre</button>' +
       '</div>';
-  } else {
-    return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation || '—') + '</p></div>' +
-      '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate || '—') + '</p></div>' +
-      '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
-      '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
-      '<div class="players-list">' + renderPlayersView(team) + '</div>';
   }
+  return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation || '—') + '</p></div>' +
+    '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate || '—') + '</p></div>' +
+    '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
+    '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
+    '<div class="players-list">' + renderPlayersView(team) + '</div>' +
+    (isAdmin
+      ? '<div class="btn-row">' +
+          '<span class="save-status" role="status" aria-live="polite"></span>' +
+          '<button class="btn btn-secondary edit-team-btn">Rediger</button>' +
+        '</div>'
+      : '');
 }
 
-function renderPlayersEdit(team) {
+function renderPlayersEdit(team, importUrl) {
   const players = team.players || [];
   const league = clubSettings.league;
   const importRow = '<div class="import-url-row">' +
-    '<input type="text" class="import-url-input" placeholder="' + escapeHtml('Lim inn ' + league.name + '-lenke, f.eks. ' + league.rosterUrlExample) + '">' +
+    '<input type="text" class="import-url-input draft-field" data-field="importUrl" value="' + escapeHtml(importUrl) + '" placeholder="' + escapeHtml('Lim inn ' + league.name + '-lenke, f.eks. ' + league.rosterUrlExample) + '">' +
     '<button class="btn btn-secondary import-players-btn">Hent tropp</button>' +
     '</div><p class="import-status" style="display:none;"></p>';
   if (!players.length) return importRow + '<p class="empty">Ingen spillere lagt inn ennå.</p>';
@@ -586,21 +625,41 @@ function showTeamSaveStatus(teamId, text, isError) {
 }
 
 function attachTeamEditHandlers() {
+  document.querySelectorAll('#teamsList .draft-field').forEach(input => {
+    input.addEventListener('input', () => { teamDraft[input.dataset.field] = input.value; });
+  });
+
+  document.querySelectorAll('.edit-team-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const team = teams.find(t => t.id === btn.closest('.card').dataset.id);
+      startEditingTeam(team);
+      renderTeams();
+    });
+  });
+
+  document.querySelectorAll('.cancel-edit-team-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stopEditingTeam();
+      renderTeams();
+    });
+  });
+
   document.querySelectorAll('.save-team-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const card = btn.closest('.card');
-      const id = card.dataset.id;
+      const id = btn.closest('.card').dataset.id;
       const team = teams.find(t => t.id === id);
-      team.name = card.querySelector('.edit-name').value;
-      team.formation = card.querySelector('.edit-formation').value;
-      team.nextMatchDate = card.querySelector('.edit-nextmatch').value;
-      team.notes = card.querySelector('.edit-notes').value;
+      const previous = {};
+      TEAM_TEXT_FIELDS.forEach(f => { previous[f] = team[f]; team[f] = teamDraft[f]; });
       try {
         await DataStore.saveTeams(teams);
+        stopEditingTeam();
         renderTeams();
         showTeamSaveStatus(id, 'Lagret ✓');
       } catch (err) {
+        Object.assign(team, previous); // skjemaet beholder teksten, så brukeren kan prøve igjen
         showTeamSaveStatus(id, 'Ikke lagret — prøv igjen.', true);
       }
     });
@@ -615,6 +674,7 @@ function attachTeamEditHandlers() {
       if (!confirm('Slette «' + (team ? team.name : 'laget') + '»? Dette kan ikke angres.')) return;
       teams = teams.filter(t => t.id !== id);
       openTeamId = null;
+      stopEditingTeam();
       await DataStore.saveTeams(teams);
       renderTeams();
     });
@@ -700,9 +760,11 @@ document.getElementById('saveNewTeamBtn').addEventListener('click', async () => 
     return;
   }
 
+  if (!confirmDiscardTeamChanges()) return;
   const newTeam = { id: 't' + Date.now(), name, formation: '', nextMatchDate: '', notes: '', players: [] };
   teams.push(newTeam);
   openTeamId = newTeam.id;
+  startEditingTeam(newTeam); // nytt lag åpnes rett i redigering
   await DataStore.saveTeams(teams);
   document.getElementById('newTeamModal').classList.remove('show');
   renderTeams();
