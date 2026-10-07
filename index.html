@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0048)file:///Users/carolineaar/Downloads/index_3.html -->
-<html lang="no"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="no">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Strategidatabase</title>
 <style>
@@ -71,7 +71,9 @@
   .btn-primary { background: var(--navy); color: var(--shell); }
   .btn-secondary { background: var(--gold); color: var(--navy); }
   .btn-danger { background: transparent; color: var(--muted); text-decoration: underline; font-weight: 400; }
-  .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; align-items: center; }
+  .save-status { font-size: 12.5px; font-weight: 600; color: var(--gold-deep); margin-right: auto; }
+  .save-status.error { color: #a34a2d; }
 
   .add-row {
     border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 14px;
@@ -181,7 +183,7 @@
 <div class="wrap">
   <div class="app-header">
     <div>
-      <p class="club-name">Din håndballklubb</p>
+      <p class="club-name" id="clubHeaderLabel"></p>
       <h1 class="app-title">Strategidatabase</h1>
     </div>
     <div class="role-switch">
@@ -202,33 +204,34 @@
       <div class="my-team-header">
         <h3>Mitt lag</h3>
         <span>
-          <span class="my-team-name" id="myTeamName">Nykøbing Falster Håndbold</span>
-          <span id="editMyTeamBtn" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;margin-left:8px;">endre</span>
+          <span class="my-team-name" id="myTeamName"></span>
+          <span id="editMyTeamBtn" style="display:none;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;margin-left:8px;">endre</span>
         </span>
       </div>
-      <div id="myTeamMatches"><p class="empty">Kunne ikke hente kampoversikt akkurat nå. Dette krever at appen er deployet med kalender-tilkoblingen aktiv (fungerer ikke lokalt uten server). <span class="edit-my-team" style="text-decoration:underline;cursor:pointer;">Endre kalenderoppsett</span></p></div>
+      <div id="myTeamMatches"><p class="empty">Henter kampoversikt…</p></div>
     </div>
     <div class="overview-grid">
       <div class="card">
         <h3>Neste kamp (motstanderlag)</h3>
-        <div id="nextMatchBlock"><p class="empty">Ingen kommende kamp satt.</p><div class="add-row" id="editNextMatchRow">+ Sett neste kamp</div></div>
+        <div id="nextMatchBlock"></div>
       </div>
       <div class="card">
         <h3>Siste taktikknotater</h3>
-        <div id="latestNotesBlock"><p class="empty">Ingen taktikknotater lagt inn ennå.</p></div>
+        <div id="latestNotesBlock"></div>
       </div>
     </div>
   </div>
 
-  <!-- MITT LAG-OPPSETT (popup ved første gangs bruk) -->
+  <!-- KLUBBINNSTILLINGER (beholdes til Firebase; knappen er skjult til admin-innlogging finnes) -->
   <div class="modal-overlay" id="myTeamModal">
     <div class="modal-box">
       <h3 style="margin:0 0 4px;font-size:16px;">Sett opp «Mitt lag»</h3>
-      <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Lim inn kalenderlenken for laget deres fra Tophåndbold sin klubkalender.</p>
-      <div class="field-row"><label>Lagnavn</label><input type="text" id="myTeamNameInput" placeholder="f.eks. Nykøbing F. Håndboldklub"></div>
+      <p id="myTeamModalIntro" style="font-size:12.5px;color:var(--muted);margin:0 0 14px;"></p>
+      <div class="field-row"><label>Lagnavn</label><input type="text" id="myTeamNameInput"></div>
       <div class="field-row"><label>Kalenderlenke</label><input type="text" id="myTeamCalendarInput" placeholder="Lim inn kalenderlenke her"></div>
-      <p style="font-size:11px;color:var(--muted);margin:6px 0 0;">Finn lenken på <a href="https://tophaandbold.dk/klub-kalender" target="_blank" style="color:var(--gold-deep);">tophaandbold.dk/klub-kalender</a> → velg liga og lag → «Android eller Google Kalender» → kopier lenken som starter med calendar.google.com</p>
+      <p id="myTeamCalendarHelp" style="font-size:11px;color:var(--muted);margin:6px 0 0;"></p>
       <div class="btn-row">
+        <button class="btn btn-danger" id="cancelMyTeamBtn">Avbryt</button>
         <button class="btn btn-primary" id="saveMyTeamBtn">Lagre</button>
       </div>
     </div>
@@ -249,8 +252,8 @@
         </div>
       </div>
     </div>
-    <div id="teamsList"><div class="card " data-id="t1788342089346"><div class="card-row team-toggle"><div><p class="t-name">Team Esbjerg</p><p class="t-meta">0 spillere · ingen formasjon satt</p></div><span class="chevron">›</span></div><div class="card-detail"><div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="Team Esbjerg"></div><div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="" placeholder="f.eks. 6-0 forsvar"></div><div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="" placeholder="f.eks. 6. september 2026"></div><div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes"></textarea></div><p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p><div class="players-list"><div class="import-url-row"><input type="text" class="import-url-input" placeholder="Lim inn Tophåndbold-lenke, f.eks. https://tophaandbold.dk/tophaandbold-theme/teams/view/31/5"><button class="btn btn-secondary import-players-btn">Hent tropp</button></div><p class="import-status" style="display:none;"></p><p class="empty">Ingen spillere lagt inn ennå.</p></div><div class="add-row add-player-row" style="margin-top:8px;">+ Legg til spiller manuelt</div><div class="btn-row"><button class="btn btn-danger delete-team-btn">Slett lag</button><button class="btn btn-primary save-team-btn">Lagre</button></div></div></div></div>
-    <div class="add-row" id="addTeamRow" style="display: block;">+ Legg til motstanderlag</div>
+    <div id="teamsList"></div>
+    <div class="add-row" id="addTeamRow">+ Legg til motstanderlag</div>
 
     <!-- SPILLERDETALJ-POPUP -->
     <div class="modal-overlay" id="playerDetailModal">
@@ -295,14 +298,14 @@
             <rect x="4" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
             <rect x="388" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
           </svg>
-          <div id="dotsLayer"><div class="dot" data-id="p0" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 20%; top: 21.1538%;">1</div><div class="dot" data-id="p1" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 37.5%; top: 32.6923%;">2</div><div class="dot" data-id="p2" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 50%; top: 25%;">3</div><div class="dot" data-id="p3" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 62.5%; top: 32.6923%;">4</div><div class="dot" data-id="p4" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 80%; top: 21.1538%;">5</div><div class="dot" data-id="p5" style="background: rgb(31, 51, 80); color: rgb(245, 240, 227); left: 50%; top: 15.3846%;">6</div></div>
+          <div id="dotsLayer"></div>
         </div>
         <p class="save-note" id="boardSaveNote"></p>
       </div>
       <div class="playbook-controls">
         <p style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;" id="presetListLabel">Lagrede forsvarsmønstre</p>
-        <div class="preset-list" id="presetList"><p class="empty" style="padding:4px 0;">Ingen mønstre lagret ennå.</p></div>
-        <div class="add-row" id="addPresetRow" style="margin-bottom: 10px; display: block;">+ Nytt mønster</div>
+        <div class="preset-list" id="presetList"></div>
+        <div class="add-row" id="addPresetRow" style="margin-bottom:10px;">+ Nytt mønster</div>
         <button class="btn btn-secondary" id="resetBoardBtn" style="width:100%;">Nullstill posisjoner</button>
       </div>
     </div>
@@ -313,9 +316,46 @@
 
 <script>
 /* ============================================================
-   DATALAG — isolert her for enkel senere Firebase-kobling.
+   KLUBBKONFIGURASJON — alt som er spesifikt for én klubb/liga.
+   Før Firebase: eneste kilde til klubbinnstillingene.
+   Etter Firebase: bare utgangspunktet når en ny klubb opprettes;
+   klubbens egne innstillinger ligger da i databasen.
+   ============================================================ */
+const CLUB_CONFIG = {
+  clubName: 'Nykøbing Falster Håndbold',
+  headerLabel: 'Din håndballklubb',        // teksten over app-tittelen
+  locale: 'nb-NO',                         // språk for ukedager og måneder i datoer
+  timeZone: 'Europe/Copenhagen',           // IANA-tidssone for kampklokkeslett og «i dag»
+  calendarId: '',                          // NFH sin kalender-ID (Google Calendar) — FYLL INN
+  league: {
+    name: 'Tophåndbold',
+    calendarHelpUrl: 'https://tophaandbold.dk/klub-kalender',
+    calendarHelpLabel: 'tophaandbold.dk/klub-kalender',
+    calendarHelpSteps: 'velg liga og lag → «Android eller Google Kalender» → kopier lenken som starter med calendar.google.com',
+    rosterUrlExample: 'https://tophaandbold.dk/tophaandbold-theme/teams/view/31/5'
+  },
+  placeholders: {
+    myTeamName: 'f.eks. Nykøbing F. Håndboldklub'
+  }
+};
+/* ============================================================ */
+
+/* ============================================================
+   DATALAG — all lagring går hit. Byttes ut ved Firebase-kobling.
    ============================================================ */
 const DataStore = {
+  // --- Klubbinnstillinger: eies av klubben, ikke av koden eller nettleseren ---
+  async getClubSettings() {
+    return CLUB_CONFIG;   // Etter Firebase: les fra databasen
+  },
+  canEditClubSettings() {
+    return false;         // Etter Firebase: true for innlogget admin
+  },
+  async saveClubSettings(settings) {
+    throw new Error('Klubbinnstillinger kan ikke lagres før databasen er koblet til.');
+  },
+
+  // --- Motstanderlag ---
   async getTeams() {
     const raw = localStorage.getItem('teams');
     return raw ? JSON.parse(raw) : [];
@@ -323,6 +363,8 @@ const DataStore = {
   async saveTeams(teams) {
     localStorage.setItem('teams', JSON.stringify(teams));
   },
+
+  // --- Playbook ---
   async getPresets(category) {
     const raw = localStorage.getItem('presets_' + category);
     return raw ? JSON.parse(raw) : null;
@@ -336,6 +378,8 @@ const DataStore = {
   async setActivePresetId(category, id) {
     localStorage.setItem('activePreset_' + category, id);
   },
+
+  // --- Neste kamp ---
   async getNextMatch() {
     const raw = localStorage.getItem('nextMatch');
     return raw ? JSON.parse(raw) : null;
@@ -346,6 +390,7 @@ const DataStore = {
 };
 /* ============================================================ */
 
+let clubSettings = CLUB_CONFIG; // erstattes av DataStore.getClubSettings() i init()
 let isAdmin = true;
 let teams = [];
 let openTeamId = null;
@@ -355,9 +400,12 @@ let activePresetId = { defense: null, attack: null };
 let boardPositions = [];
 
 function escapeHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function defaultPositions() {
@@ -382,6 +430,7 @@ function setRole(admin) {
   renderTeams();
   renderPresetList();
   renderDots();
+  renderOverview();
   document.getElementById('addPresetRow').style.display = isAdmin ? 'block' : 'none';
 }
 
@@ -454,7 +503,7 @@ function renderTeams() {
 
   container.innerHTML = teams.map(team => {
     const open = team.id === openTeamId;
-    return '<div class="card ' + (open ? 'open' : '') + '" data-id="' + team.id + '">' +
+    return '<div class="card ' + (open ? 'open' : '') + '" data-id="' + escapeHtml(team.id) + '">' +
       '<div class="card-row team-toggle">' +
         '<div><p class="t-name">' + escapeHtml(team.name || 'Uten navn') + '</p>' +
         '<p class="t-meta">' + (team.players ? team.players.length : 0) + ' spillere · ' + escapeHtml(team.formation || 'ingen formasjon satt') + '</p></div>' +
@@ -478,21 +527,22 @@ function renderTeams() {
 
 function renderTeamDetail(team) {
   if (isAdmin) {
-    return '<div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="' + escapeHtml(team.name||'') + '"></div>' +
-      '<div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="' + escapeHtml(team.formation||'') + '" placeholder="f.eks. 6-0 forsvar"></div>' +
-      '<div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="' + escapeHtml(team.nextMatchDate||'') + '" placeholder="f.eks. 6. september 2026"></div>' +
-      '<div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes">' + escapeHtml(team.notes||'') + '</textarea></div>' +
+    return '<div class="field-row"><label>Lagnavn</label><input type="text" class="edit-name" value="' + escapeHtml(team.name) + '"></div>' +
+      '<div class="field-row"><label>Formasjon</label><input type="text" class="edit-formation" value="' + escapeHtml(team.formation) + '" placeholder="f.eks. 6-0 forsvar"></div>' +
+      '<div class="field-row"><label>Neste kampdato</label><input type="text" class="edit-nextmatch" value="' + escapeHtml(team.nextMatchDate) + '" placeholder="f.eks. 6. september 2026"></div>' +
+      '<div class="field-row"><label>Taktikknotater</label><textarea class="edit-notes">' + escapeHtml(team.notes) + '</textarea></div>' +
       '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
       '<div class="players-list">' + renderPlayersEdit(team) + '</div>' +
       '<div class="add-row add-player-row" style="margin-top:8px;">+ Legg til spiller manuelt</div>' +
       '<div class="btn-row">' +
+        '<span class="save-status" role="status" aria-live="polite"></span>' +
         '<button class="btn btn-danger delete-team-btn">Slett lag</button>' +
         '<button class="btn btn-primary save-team-btn">Lagre</button>' +
       '</div>';
   } else {
-    return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation||'—') + '</p></div>' +
-      '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate||'—') + '</p></div>' +
-      '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes||'—') + '</p></div>' +
+    return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation || '—') + '</p></div>' +
+      '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate || '—') + '</p></div>' +
+      '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
       '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
       '<div class="players-list">' + renderPlayersView(team) + '</div>';
   }
@@ -500,8 +550,9 @@ function renderTeamDetail(team) {
 
 function renderPlayersEdit(team) {
   const players = team.players || [];
+  const league = clubSettings.league;
   const importRow = '<div class="import-url-row">' +
-    '<input type="text" class="import-url-input" placeholder="Lim inn Tophåndbold-lenke, f.eks. https://tophaandbold.dk/tophaandbold-theme/teams/view/31/5">' +
+    '<input type="text" class="import-url-input" placeholder="' + escapeHtml('Lim inn ' + league.name + '-lenke, f.eks. ' + league.rosterUrlExample) + '">' +
     '<button class="btn btn-secondary import-players-btn">Hent tropp</button>' +
     '</div><p class="import-status" style="display:none;"></p>';
   if (!players.length) return importRow + '<p class="empty">Ingen spillere lagt inn ennå.</p>';
@@ -523,6 +574,17 @@ function renderPlayerTile(p, idx) {
   '</div>';
 }
 
+// Viser en kort melding ved «Lagre» i kortet til et lag (overlever ny tegning av listen).
+function showTeamSaveStatus(teamId, text, isError) {
+  const card = Array.from(document.querySelectorAll('#teamsList .card')).find(c => c.dataset.id === teamId);
+  const status = card && card.querySelector('.save-status');
+  if (!status) return;
+  status.textContent = text;
+  status.classList.toggle('error', !!isError);
+  clearTimeout(status._timer);
+  if (!isError) status._timer = setTimeout(() => { status.textContent = ''; }, 2500);
+}
+
 function attachTeamEditHandlers() {
   document.querySelectorAll('.save-team-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -534,8 +596,13 @@ function attachTeamEditHandlers() {
       team.formation = card.querySelector('.edit-formation').value;
       team.nextMatchDate = card.querySelector('.edit-nextmatch').value;
       team.notes = card.querySelector('.edit-notes').value;
-      await DataStore.saveTeams(teams);
-      renderTeams();
+      try {
+        await DataStore.saveTeams(teams);
+        renderTeams();
+        showTeamSaveStatus(id, 'Lagret ✓');
+      } catch (err) {
+        showTeamSaveStatus(id, 'Ikke lagret — prøv igjen.', true);
+      }
     });
   });
 
@@ -544,6 +611,8 @@ function attachTeamEditHandlers() {
       e.stopPropagation();
       const card = btn.closest('.card');
       const id = card.dataset.id;
+      const team = teams.find(t => t.id === id);
+      if (!confirm('Slette «' + (team ? team.name : 'laget') + '»? Dette kan ikke angres.')) return;
       teams = teams.filter(t => t.id !== id);
       openTeamId = null;
       await DataStore.saveTeams(teams);
@@ -576,7 +645,7 @@ function attachTeamEditHandlers() {
       const input = card.querySelector('.import-url-input');
       const statusEl = card.querySelector('.import-status');
       const url = input.value.trim();
-      if (!url) { alert('Lim inn en Tophåndbold-lenke først.'); return; }
+      if (!url) { alert('Lim inn en ' + clubSettings.league.name + '-lenke først.'); return; }
 
       statusEl.style.display = 'block';
       statusEl.textContent = 'Henter spillertropp…';
@@ -594,8 +663,8 @@ function attachTeamEditHandlers() {
           strengths: '', weaknesses: '', preferredDirection: '', keyPlayer: false
         }));
         await DataStore.saveTeams(teams);
-        statusEl.textContent = data.players.length + ' spillere hentet.';
         renderTeams();
+        showTeamSaveStatus(id, data.players.length + ' spillere hentet ✓');
       } catch (err) {
         statusEl.textContent = 'Kunne ikke hente spillertropp. Dette krever at appen er deployet (fungerer ikke lokalt uten server).';
       }
@@ -695,6 +764,7 @@ document.getElementById('savePlayerDetailBtn').addEventListener('click', async (
   await DataStore.saveTeams(teams);
   document.getElementById('playerDetailModal').classList.remove('show');
   renderTeams();
+  showTeamSaveStatus(teamId, (player.name || 'Spiller') + ' lagret ✓');
 });
 
 document.getElementById('deletePlayerBtn').addEventListener('click', async () => {
@@ -753,7 +823,7 @@ function renderPresetList() {
   }
 
   list.innerHTML = items.map(p =>
-    '<div class="preset-btn btn ' + (p.id === activeId ? 'btn-primary' : 'btn-secondary') + '" data-id="' + p.id + '">' +
+    '<div class="preset-btn btn ' + (p.id === activeId ? 'btn-primary' : 'btn-secondary') + '" data-id="' + escapeHtml(p.id) + '">' +
       '<span class="preset-btn-name">' + escapeHtml(p.name) + '</span>' +
       (isAdmin ? '<span class="delete-preset" style="font-size:11px;opacity:0.7;margin-left:8px;">✕</span>' : '') +
     '</div>'
@@ -844,8 +914,8 @@ function makeDraggable(dot, pos) {
       await DataStore.savePresets(playbookCategory, presets[playbookCategory]);
     }
     const note = document.getElementById('boardSaveNote');
-    note.textContent = 'Posisjon lagret';
-    setTimeout(() => { note.textContent = ''; }, 1200);
+    note.textContent = preset ? 'Posisjon lagret' : 'Opprett et mønster for å lagre posisjonene';
+    setTimeout(() => { note.textContent = ''; }, 1800);
   }
 
   dot.addEventListener('mousedown', startDrag);
@@ -867,64 +937,100 @@ document.getElementById('resetBoardBtn').addEventListener('click', async () => {
   renderDots();
 });
 
+/* ---------- Klubbinnstillinger inn i markup ---------- */
+function applyClubConfig() {
+  const c = clubSettings;
+  document.getElementById('clubHeaderLabel').textContent = c.headerLabel;
+  document.getElementById('myTeamName').textContent = c.clubName;
+  document.getElementById('myTeamNameInput').placeholder = c.placeholders.myTeamName;
+  document.getElementById('myTeamModalIntro').textContent =
+    'Lim inn kalenderlenken for laget deres fra ' + c.league.name + ' sin klubkalender.';
+  document.getElementById('myTeamCalendarHelp').innerHTML =
+    'Finn lenken på <a href="' + escapeHtml(c.league.calendarHelpUrl) + '" target="_blank" rel="noopener" style="color:var(--gold-deep);">' +
+    escapeHtml(c.league.calendarHelpLabel) + '</a> → ' + escapeHtml(c.league.calendarHelpSteps);
+  // «endre» vises bare når innstillingene faktisk kan lagres (admin etter Firebase)
+  document.getElementById('editMyTeamBtn').style.display = DataStore.canEditClubSettings() ? 'inline' : 'none';
+}
+
 /* ---------- Mitt lag ---------- */
 document.getElementById('editMyTeamBtn').addEventListener('click', () => {
-  const raw = localStorage.getItem('myTeam');
-  if (raw) {
-    const myTeam = JSON.parse(raw);
-    document.getElementById('myTeamNameInput').value = myTeam.name || '';
-    document.getElementById('myTeamCalendarInput').value = myTeam.calendarId || '';
-  }
+  document.getElementById('myTeamNameInput').value = clubSettings.clubName || '';
+  document.getElementById('myTeamCalendarInput').value = clubSettings.calendarId || '';
   document.getElementById('myTeamModal').classList.add('show');
 });
 
-async function initMyTeam() {
-  const raw = localStorage.getItem('myTeam');
-  const myTeam = raw ? JSON.parse(raw) : null;
-
-  if (!myTeam || !myTeam.calendarId) {
-    document.getElementById('myTeamModal').classList.add('show');
-    return;
-  }
-
-  document.getElementById('myTeamName').textContent = myTeam.name || '';
-  await loadMyTeamMatches(myTeam.calendarId);
-}
+document.getElementById('cancelMyTeamBtn').addEventListener('click', () => {
+  document.getElementById('myTeamModal').classList.remove('show');
+});
 
 function extractCalendarId(input) {
   // Godtar enten en full lenke (...?cid=ID) eller en ren kalender-ID limt inn direkte
   const trimmed = input.trim();
   const cidMatch = trimmed.match(/[?&]cid=([^&]+)/);
   if (cidMatch) return decodeURIComponent(cidMatch[1]);
-  return trimmed; // anta at det limte er selve ID-en
+  return trimmed;
 }
 
 document.getElementById('saveMyTeamBtn').addEventListener('click', async () => {
   const name = document.getElementById('myTeamNameInput').value.trim();
   const calendarInput = document.getElementById('myTeamCalendarInput').value.trim();
   if (!name || !calendarInput) { alert('Fyll ut både lagnavn og kalenderlenke.'); return; }
-  const calendarId = extractCalendarId(calendarInput);
-  localStorage.setItem('myTeam', JSON.stringify({ name, calendarId }));
-  document.getElementById('myTeamModal').classList.remove('show');
-  document.getElementById('myTeamName').textContent = name;
-  await loadMyTeamMatches(calendarId);
+  const updated = { ...clubSettings, clubName: name, calendarId: extractCalendarId(calendarInput) };
+  try {
+    await DataStore.saveClubSettings(updated);
+    clubSettings = updated;
+    document.getElementById('myTeamModal').classList.remove('show');
+    applyClubConfig();
+    await initMyTeam();
+  } catch (err) {
+    alert(err.message);
+  }
 });
+
+async function initMyTeam() {
+  document.getElementById('myTeamName').textContent = clubSettings.clubName;
+  const block = document.getElementById('myTeamMatches');
+  if (!clubSettings.calendarId) {
+    block.innerHTML = '<p class="empty">Kampkalenderen er ikke satt opp ennå.</p>';
+    return;
+  }
+  await loadMyTeamMatches(clubSettings.calendarId);
+}
 
 async function loadMyTeamMatches(calendarId) {
   const block = document.getElementById('myTeamMatches');
   block.innerHTML = '<p class="empty">Henter kampoversikt…</p>';
   try {
-    const res = await fetch('/api/kalender?calendarId=' + encodeURIComponent(calendarId));
+    const res = await fetch('/api/kalender?calendarId=' + encodeURIComponent(calendarId) +
+      '&tz=' + encodeURIComponent(clubSettings.timeZone));
     if (!res.ok) throw new Error('Kunne ikke hente kalender');
     const data = await res.json();
     renderMyTeamMatches(data.events || []);
   } catch (err) {
     block.innerHTML = '<p class="empty">Kunne ikke hente kampoversikt akkurat nå. ' +
-      'Dette krever at appen er deployet med kalender-tilkoblingen aktiv (fungerer ikke lokalt uten server). ' +
-      '<span class="edit-my-team" style="text-decoration:underline;cursor:pointer;">Endre kalenderoppsett</span></p>';
-    const editLink = block.querySelector('.edit-my-team');
-    if (editLink) editLink.addEventListener('click', () => document.getElementById('myTeamModal').classList.add('show'));
+      'Kalenderen krever at appen kjører på Vercel, ikke som lokal fil.</p>';
   }
+}
+
+// Dagens dato (ÅÅÅÅ-MM-DD) i klubbens tidssone — ikke UTC.
+function todayInClubTimeZone() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: clubSettings.timeZone, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+
+// «lør. 3. okt. kl. 18.00». date/time kommer ferdig omregnet til klubbens tidssone fra api/kalender.
+function formatMatchDate(e) {
+  const [y, m, d] = String(e.date || '').split('-').map(Number);
+  if (!y || !m || !d) return e.date || '';
+  const day = new Date(Date.UTC(y, m - 1, d, 12));
+  const fmt = (opts) => new Intl.DateTimeFormat(clubSettings.locale, { timeZone: 'UTC', ...opts }).format(day);
+  const monthShort = fmt({ month: 'short' }).replace(/\.$/, '');
+  const monthLong = fmt({ month: 'long' });
+  const month = monthShort === monthLong ? monthShort : monthShort + '.'; // «mai», men «okt.»
+  let text = fmt({ weekday: 'short' }) + ' ' + d + '. ' + month;
+  if (e.time) text += ' kl. ' + e.time.replace(':', '.');
+  return text;
 }
 
 function renderMyTeamMatches(events) {
@@ -933,19 +1039,19 @@ function renderMyTeamMatches(events) {
     block.innerHTML = '<p class="empty">Ingen kamper funnet i kalenderen.</p>';
     return;
   }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInClubTimeZone();
   const upcoming = events.filter(e => e.date >= today).slice(0, 3);
   const played = events.filter(e => e.date < today).slice(-3).reverse();
 
   let html = '';
   upcoming.forEach(e => {
     html += '<div class="match-row"><div><p class="match-opponent">' + escapeHtml(e.summary) + '</p>' +
-      '<p class="match-date">' + escapeHtml(e.date) + (e.location ? ' · ' + escapeHtml(e.location) : '') + '</p></div>' +
+      '<p class="match-date">' + escapeHtml(formatMatchDate(e)) + (e.location ? ' · ' + escapeHtml(e.location) : '') + '</p></div>' +
       '<span class="match-tag upcoming">Kommende</span></div>';
   });
   played.forEach(e => {
     html += '<div class="match-row"><div><p class="match-opponent">' + escapeHtml(e.summary) + '</p>' +
-      '<p class="match-date">' + escapeHtml(e.date) + '</p></div>' +
+      '<p class="match-date">' + escapeHtml(formatMatchDate(e)) + '</p></div>' +
       '<span class="match-tag played">Spilt</span></div>';
   });
   block.innerHTML = html || '<p class="empty">Ingen kamper å vise.</p>';
@@ -953,6 +1059,8 @@ function renderMyTeamMatches(events) {
 
 /* ---------- Init ---------- */
 async function init() {
+  clubSettings = await DataStore.getClubSettings();
+  applyClubConfig();
   await loadTeams();
   await loadPresetsForCategory();
   await renderOverview();
@@ -963,6 +1071,5 @@ async function init() {
 init();
 </script>
 
-
-
-</body></html>
+</body>
+</html>
