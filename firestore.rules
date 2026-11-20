@@ -9,6 +9,8 @@ rules_version = '2';
 // - En admin kan ikke fjerne eller nedgradere seg selv. Dermed finnes det
 //   alltid minst én admin igjen i klubben.
 // - E-posten må være bekreftet (Google-kontoer er alltid bekreftet).
+// - Plattformeieren (listen i erEier) kan opprette nye klubber med første admin,
+//   og se klubber og tilganger, men ikke lese eller endre klubbenes data.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -38,6 +40,12 @@ service cloud.firestore {
         && get(mittMedlemskapPath()).data.rolle == 'admin';
     }
 
+    // Plattformeier. Samme liste som PLATFORM_OWNERS i index.html.
+    function erEier() {
+      return innlogget()
+        && minEpost() in ['caroline.aar.jakobsen@gmail.com'];
+    }
+
     function gyldigMedlem(d) {
       return d.keys().hasOnly(['epost', 'navn', 'rolle', 'klubbId', 'lagtTilAv', 'lagtTil'])
         && d.rolle in ['admin', 'spiller']
@@ -47,9 +55,10 @@ service cloud.firestore {
     // Tilganger: én e-post hører til én klubb
     match /medlemmer/{epost} {
       allow read: if innlogget()
-        && (epost == minEpost() || erAdmin(resource.data.klubbId));
+        && (epost == minEpost() || erEier() || erAdmin(resource.data.klubbId));
 
-      allow create: if erAdmin(request.resource.data.klubbId)
+      allow create: if (erAdmin(request.resource.data.klubbId)
+          || (erEier() && existsAfter(/databases/$(database)/documents/klubber/$(request.resource.data.klubbId))))
         && epost == epost.lower()
         && request.resource.data.epost == epost
         && request.resource.data.lagtTilAv == minEpost()
@@ -67,7 +76,11 @@ service cloud.firestore {
 
     // Klubben og dataene dens
     match /klubber/{klubbId} {
-      allow read: if erMedlem(klubbId);
+      allow read: if erMedlem(klubbId) || erEier();
+      allow create: if erEier()
+        && request.resource.data.keys().hasOnly(['navn', 'opprettet', 'opprettetAv'])
+        && request.resource.data.navn is string
+        && request.resource.data.opprettetAv == minEpost();
       allow update: if erAdmin(klubbId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['innstillinger']);
 

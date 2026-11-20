@@ -28,7 +28,12 @@ og lagrer alt i klubbens felles database.
 ## 2. Sikkerhetsregler
 **Firestore Database → Rules**: erstatt alt med innholdet i `firestore.rules` og klikk **Publish**.
 
-## 3. Opprett klubben og første admin (gjøres én gang per klubb)
+## 3. Ny klubb
+Plattformeieren (se `PLATFORM_OWNERS` i `index.html` og `erEier()` i `firestore.rules`) oppretter nye klubber
+i appen under fanen **Klubber**: klubbnavn, klubb-ID og første admins e-post. Admin gir deretter resten av
+klubben tilgang under **Tilganger**.
+
+Manuelt i konsollen (bare nødvendig hvis eieren ikke selv har tilgang ennå):
 I **Firestore Database → Data**:
 
 1. **Start collection** → Collection ID `klubber` → Document ID f.eks. `nfh`

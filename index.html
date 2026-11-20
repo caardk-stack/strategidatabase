@@ -273,6 +273,7 @@
     <button data-tab="teams">Motstanderlag</button>
     <button data-tab="playbook">Playbook</button>
     <button data-tab="access" id="accessTabBtn" style="display:none;">Tilganger</button>
+    <button data-tab="clubs" id="clubsTabBtn" style="display:none;">Klubber</button>
   </nav>
 
   <!-- OVERSIKT-PANEL -->
@@ -411,6 +412,25 @@
       <div id="memberList"><p class="empty">Henter…</p></div>
     </div>
   </div>
+  <!-- KLUBBER-PANEL (bare plattformeier) -->
+  <div class="panel" id="panel-clubs">
+    <div class="card">
+      <h3 class="section-label">Ny klubb</h3>
+      <p class="hint">Oppretter klubben og gir første admin tilgang. Admin logger deretter inn og gir resten av klubben tilgang selv.</p>
+      <div class="field-row"><label>Klubbnavn *</label><input type="text" id="newClubName" placeholder="f.eks. Odense Håndbold"></div>
+      <div class="field-row"><label>Klubb-ID *</label><input type="text" id="newClubId" placeholder="lages fra navnet, f.eks. odense-handbold"></div>
+      <div class="field-row"><label>Admin e-post *</label><input type="email" id="newClubAdminEmail" placeholder="trener@klubb.dk"></div>
+      <div class="field-row"><label>Admin navn</label><input type="text" id="newClubAdminName" placeholder="f.eks. Hovedtrener"></div>
+      <div class="btn-row">
+        <span class="save-status" id="clubsStatus" role="status" aria-live="polite"></span>
+        <button class="btn btn-primary" id="createClubBtn">Opprett klubb</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-label">Klubber</h3>
+      <div id="clubList"><p class="empty">Henter…</p></div>
+    </div>
+  </div>
   </div><!-- /appContent -->
 
   <p class="footer-note" id="footerNote"></p>
@@ -460,6 +480,10 @@ const FIREBASE_CONFIG = {
 };
 const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/13.4.0/';
 const USE_FIREBASE = !!FIREBASE_CONFIG.apiKey;
+
+// Plattformeiere kan opprette nye klubber (fanen «Klubber»).
+// Må stemme med erEier() i firestore.rules — det er reglene som faktisk gir tilgangen.
+const PLATFORM_OWNERS = ['caroline.aar.jakobsen@gmail.com'];
 /* ============================================================ */
 
 // Klubbens lagrede innstillinger legges oppå CLUB_CONFIG, så nye felt i koden
@@ -594,6 +618,32 @@ function createFirebaseDataStore(fs, db, member) {
     },
     async removeMember(epost) {
       await fs.deleteDoc(fs.doc(db, 'medlemmer', epost));
+    },
+
+    // --- Klubber (bare plattformeier) ---
+    async listClubs() {
+      const [clubs, members] = await Promise.all([
+        fs.getDocs(fs.collection(db, 'klubber')),
+        fs.getDocs(fs.collection(db, 'medlemmer'))
+      ]);
+      const all = members.docs.map(d => d.data());
+      return clubs.docs.map(d => ({
+        id: d.id,
+        navn: d.data().navn || d.id,
+        admins: all.filter(m => m.klubbId === d.id && m.rolle === 'admin').map(m => m.epost),
+        antall: all.filter(m => m.klubbId === d.id).length
+      }));
+    },
+    async createClub(id, navn, adminEpost, adminNavn) {
+      const batch = fs.writeBatch(db);
+      batch.set(fs.doc(db, 'klubber', id), {
+        navn, opprettet: fs.serverTimestamp(), opprettetAv: member.epost
+      });
+      batch.set(fs.doc(db, 'medlemmer', adminEpost), {
+        epost: adminEpost, navn: adminNavn, rolle: 'admin', klubbId: id,
+        lagtTilAv: member.epost, lagtTil: fs.serverTimestamp()
+      });
+      await batch.commit();
     }
   };
 }
@@ -658,6 +708,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
     if (btn.dataset.tab === 'overview') renderOverview();
     if (btn.dataset.tab === 'playbook') { renderPresetList(); renderDots(); }
     if (btn.dataset.tab === 'access') renderAccess();
+    if (btn.dataset.tab === 'clubs') renderClubs();
   });
 });
 
@@ -1441,6 +1492,72 @@ document.getElementById('addMemberBtn').addEventListener('click', async () => {
   }
 });
 
+/* ---------- Klubber (bare plattformeier) ---------- */
+let clubs = [];
+
+// «Odense Håndbold» → «odense-handbold»
+function slugify(text) {
+  return text.toLowerCase()
+    .replace(/æ/g, 'ae').replace(/ø/g, 'o').replace(/å/g, 'a')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+}
+
+function showClubsStatus(text, isError) {
+  const el = document.getElementById('clubsStatus');
+  el.textContent = text;
+  el.classList.toggle('error', !!isError);
+  clearTimeout(el._timer);
+  if (!isError) el._timer = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+async function renderClubs() {
+  const list = document.getElementById('clubList');
+  try {
+    clubs = await DataStore.listClubs();
+  } catch (err) {
+    list.innerHTML = '<p class="empty">Kunne ikke hente klubbene. Er sikkerhetsreglene oppdatert?</p>';
+    return;
+  }
+  clubs.sort((a, b) => a.navn.localeCompare(b.navn, clubSettings.locale));
+  list.innerHTML = clubs.length ? clubs.map(c =>
+    '<div class="member-row"><div class="member-info">' +
+      '<p class="member-name">' + escapeHtml(c.navn) + '</p>' +
+      '<p class="member-meta">ID: ' + escapeHtml(c.id) + ' · ' + c.antall + ' med tilgang · admin: ' +
+        escapeHtml(c.admins.join(', ') || 'ingen') + '</p>' +
+    '</div></div>'
+  ).join('') : '<p class="empty">Ingen klubber ennå.</p>';
+}
+
+let clubIdEdited = false;
+document.getElementById('newClubName').addEventListener('input', (e) => {
+  if (!clubIdEdited) document.getElementById('newClubId').value = slugify(e.target.value);
+});
+document.getElementById('newClubId').addEventListener('input', () => { clubIdEdited = true; });
+
+document.getElementById('createClubBtn').addEventListener('click', async () => {
+  const navn = document.getElementById('newClubName').value.trim();
+  const id = document.getElementById('newClubId').value.trim();
+  const adminEpost = document.getElementById('newClubAdminEmail').value.trim().toLowerCase();
+  const adminNavn = document.getElementById('newClubAdminName').value.trim();
+  if (!navn) { showClubsStatus('Skriv inn klubbnavn.', true); return; }
+  if (!/^[a-z0-9-]{2,40}$/.test(id)) { showClubsStatus('Klubb-ID kan bare ha små bokstaver, tall og bindestrek.', true); return; }
+  if (clubs.some(c => c.id === id)) { showClubsStatus('Det finnes allerede en klubb med denne ID-en.', true); return; }
+  if (!VALID_EMAIL.test(adminEpost)) { showClubsStatus('Skriv inn en gyldig e-post for admin.', true); return; }
+  if (!confirm('Opprette «' + navn + '» og gi ' + adminEpost + ' admin-tilgang?')) return;
+  try {
+    await DataStore.createClub(id, navn, adminEpost, adminNavn);
+    ['newClubName', 'newClubId', 'newClubAdminEmail', 'newClubAdminName'].forEach(f => {
+      document.getElementById(f).value = '';
+    });
+    clubIdEdited = false;
+    showClubsStatus(navn + ' er opprettet ✓');
+    renderClubs();
+  } catch (err) {
+    showClubsStatus('Kunne ikke opprette klubben. E-posten kan allerede være knyttet til en annen klubb.', true);
+  }
+});
+
 /* ---------- Oppstart av selve appen (etter innlogging i Firebase-modus) ---------- */
 async function startApp() {
   document.getElementById('authScreen').style.display = 'none';
@@ -1540,6 +1657,7 @@ async function initFirebase() {
     document.getElementById('userRole').textContent = isAdmin ? 'Admin' : 'Spiller';
     document.getElementById('userBox').style.display = 'flex';
     document.getElementById('accessTabBtn').style.display = isAdmin ? 'inline-block' : 'none';
+    document.getElementById('clubsTabBtn').style.display = PLATFORM_OWNERS.includes(epost) ? 'inline-block' : 'none';
     document.getElementById('footerNote').textContent = 'Innlogget — data lagres i klubbens felles database';
     try {
       await startApp();
