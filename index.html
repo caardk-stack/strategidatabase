@@ -190,7 +190,40 @@
   .player-stats .ps-grid { display: grid; grid-template-columns: 1fr auto; gap: 3px 14px; font-size: 12px; }
   .player-stats .ps-grid span:nth-child(even) { text-align: right; font-family: var(--mono); }
 
-  .player-detail-fields .field-row textarea { min-height: 44px; }
+  .analysis-field { margin-bottom: 14px; }
+  .analysis-field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-deep); margin: 0 0 6px; }
+  .analysis-field textarea {
+    display: block; width: 100%; min-height: 160px; resize: vertical;
+    font-family: inherit; font-size: 14px; line-height: 1.6; padding: 12px 14px;
+    border: 1px solid var(--line-strong); border-radius: 8px; background: var(--shell); color: var(--navy);
+  }
+  .analysis-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(142,197,255,0.15); }
+  .analysis-field textarea:disabled { opacity: 1; color: var(--navy); background: transparent; border-style: dashed; }
+
+  /* Spillervisning: popup på mobil, sidepanel på PC */
+  .modal-box.player-sheet { max-width: 560px; max-height: calc(100vh - 40px); overflow-y: auto; }
+  .player-sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .sheet-close { width: 36px; height: 36px; flex-shrink: 0; border: none; border-radius: 8px; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; cursor: pointer; }
+  .sheet-close:hover { background: rgba(142,197,255,0.12); color: var(--navy); }
+  .sheet-hint { display: none; font-size: 12px; color: var(--muted); margin: -4px 0 12px; }
+  .player-detail-fields .field-row input { min-width: 0; }
+  .player-tile.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  @media (min-width: 901px) {
+    .modal-overlay.player-sheet-overlay { background: transparent; pointer-events: none; padding: 0; justify-content: flex-end; align-items: stretch; }
+    .modal-box.player-sheet {
+      pointer-events: auto; width: 440px; max-width: 440px; height: 100vh; max-height: 100vh;
+      border-radius: 0; border-left: 1px solid var(--line-strong); box-shadow: -12px 0 32px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column;
+    }
+    .player-sheet .btn-row { position: sticky; bottom: -1.5rem; background: var(--card); padding: 12px 0 1.5rem; margin-top: auto; border-top: 1px solid var(--line); }
+    .sheet-hint { display: block; }
+    body.player-panel-open .main-area { padding-right: 440px; }
+  }
+  @media (max-width: 900px) {
+    .modal-overlay.player-sheet-overlay { padding: 12px; }
+    .modal-box.player-sheet { max-height: calc(100vh - 24px); }
+    .analysis-field textarea { min-height: 140px; }
+  }
   .toggle-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
   .toggle-switch {
     width: 40px; height: 22px; border-radius: 999px; background: var(--line-strong);
@@ -507,14 +540,26 @@
     <div class="add-row" id="addTeamRow">+ Legg til motstanderlag</div>
 
     <!-- SPILLERDETALJ-POPUP -->
-    <div class="modal-overlay" id="playerDetailModal">
-      <div class="modal-box">
-        <h3 id="playerDetailName" style="margin:0 0 4px;font-size:16px;"></h3>
-        <p id="playerDetailMeta" style="font-size:12.5px;color:var(--muted);margin:0 0 14px;"></p>
+    <div class="modal-overlay player-sheet-overlay" id="playerDetailModal">
+      <div class="modal-box player-sheet" role="dialog" aria-labelledby="playerDetailName">
+        <div class="player-sheet-head">
+          <div>
+            <h3 id="playerDetailName" style="margin:0 0 4px;font-size:16px;"></h3>
+            <p id="playerDetailMeta" style="font-size:12.5px;color:var(--muted);margin:0;"></p>
+          </div>
+          <button type="button" class="sheet-close" id="closePlayerDetailBtn" aria-label="Lukk">×</button>
+        </div>
+        <p class="sheet-hint">Klikk på en annen spiller i listen for å bytte.</p>
         <div class="player-stats" id="playerStatsBlock"></div>
         <div class="player-detail-fields">
-          <div class="field-row"><label>Styrker</label><textarea id="playerStrengthsInput" placeholder="F.eks. sterkt skudd fra 9m"></textarea></div>
-          <div class="field-row"><label>Svakheter</label><textarea id="playerWeaknessesInput" placeholder="F.eks. svak i forsvar mot gjennombrudd"></textarea></div>
+          <div class="analysis-field">
+            <label for="playerStrengthsInput">Styrker</label>
+            <textarea id="playerStrengthsInput" rows="7" placeholder="Skriv analysen her. F.eks.:&#10;– Sterkt skudd fra 9 m, særlig lavt i hjørnet&#10;– Rask i kontring, løper ofte første bølge&#10;– Søker 1:1 mot venstre"></textarea>
+          </div>
+          <div class="analysis-field">
+            <label for="playerWeaknessesInput">Svakheter</label>
+            <textarea id="playerWeaknessesInput" rows="7" placeholder="Skriv analysen her. F.eks.:&#10;– Svak i forsvar mot gjennombrudd&#10;– Mister ballen under press fra offensiv 5:1&#10;– Sliter i returløp"></textarea>
+          </div>
           <div class="field-row"><label>Foretrukket retning</label><input type="text" id="playerDirectionInput" placeholder="F.eks. venstre, høyre, midtstilt"></div>
           <div class="toggle-row">
             <div class="toggle-switch" id="keyPlayerToggle"><div class="knob"></div></div>
@@ -879,6 +924,10 @@ function setRole(admin) {
 /* ---------- Faner ---------- */
 document.querySelectorAll('nav.tabs button').forEach(btn => {
   btn.addEventListener('click', () => {
+    if (isPlayerPanelOpen()) {
+      if (!confirmLeavePlayerDetail()) return;
+      closePlayerDetail();
+    }
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1190,9 +1239,13 @@ function attachTeamEditHandlers() {
       const card = tile.closest('.card');
       const teamId = card.dataset.id;
       const idx = parseInt(tile.dataset.idx, 10);
+      if (currentPlayerContext && isPlayerPanelOpen() &&
+          currentPlayerContext.teamId === teamId && currentPlayerContext.idx === idx) return;
+      if (!confirmLeavePlayerDetail()) return;
       openPlayerDetail(teamId, idx);
     });
   });
+  markSelectedPlayerTile();
 }
 
 document.getElementById('addTeamRow').addEventListener('click', () => {
@@ -1261,7 +1314,52 @@ function openPlayerDetail(teamId, idx) {
   document.getElementById('deletePlayerBtn').style.display = isAdmin ? 'inline-block' : 'none';
 
   document.getElementById('playerDetailModal').classList.add('show');
+  document.body.classList.add('player-panel-open');
+  playerDetailSnapshot = currentPlayerFormState();
+  markSelectedPlayerTile();
 }
+
+let playerDetailSnapshot = '';
+function currentPlayerFormState() {
+  return JSON.stringify([
+    document.getElementById('playerStrengthsInput').value,
+    document.getElementById('playerWeaknessesInput').value,
+    document.getElementById('playerDirectionInput').value,
+    keyPlayerToggleState
+  ]);
+}
+function isPlayerPanelOpen() {
+  return document.getElementById('playerDetailModal').classList.contains('show');
+}
+function playerDetailIsDirty() {
+  return isAdmin && isPlayerPanelOpen() && currentPlayerFormState() !== playerDetailSnapshot;
+}
+function confirmLeavePlayerDetail() {
+  return !playerDetailIsDirty() || confirm('Du har endringer på denne spilleren som ikke er lagret. Forkaste dem?');
+}
+function closePlayerDetail() {
+  document.getElementById('playerDetailModal').classList.remove('show');
+  document.body.classList.remove('player-panel-open');
+  currentPlayerContext = null;
+  markSelectedPlayerTile();
+}
+function markSelectedPlayerTile() {
+  document.querySelectorAll('.player-tile.selected').forEach(t => t.classList.remove('selected'));
+  if (!currentPlayerContext || !isPlayerPanelOpen()) return;
+  const card = document.querySelector('.card[data-id="' + currentPlayerContext.teamId + '"]');
+  const tile = card && card.querySelector('.player-tile[data-idx="' + currentPlayerContext.idx + '"]');
+  if (tile) tile.classList.add('selected');
+}
+document.getElementById('closePlayerDetailBtn').addEventListener('click', () => {
+  if (confirmLeavePlayerDetail()) closePlayerDetail();
+});
+document.getElementById('playerDetailModal').addEventListener('click', (e) => {
+  // Klikk på den mørke bakgrunnen (mobil) lukker popupen
+  if (e.target.id === 'playerDetailModal' && confirmLeavePlayerDetail()) closePlayerDetail();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && isPlayerPanelOpen() && confirmLeavePlayerDetail()) closePlayerDetail();
+});
 
 document.getElementById('keyPlayerToggle').addEventListener('click', () => {
   if (!isAdmin) return;
@@ -1270,7 +1368,7 @@ document.getElementById('keyPlayerToggle').addEventListener('click', () => {
 });
 
 document.getElementById('cancelPlayerDetailBtn').addEventListener('click', () => {
-  document.getElementById('playerDetailModal').classList.remove('show');
+  if (confirmLeavePlayerDetail()) closePlayerDetail();
 });
 
 document.getElementById('savePlayerDetailBtn').addEventListener('click', async () => {
@@ -1283,7 +1381,8 @@ document.getElementById('savePlayerDetailBtn').addEventListener('click', async (
   player.preferredDirection = document.getElementById('playerDirectionInput').value.trim();
   player.keyPlayer = keyPlayerToggleState;
   await DataStore.saveTeams(teams);
-  document.getElementById('playerDetailModal').classList.remove('show');
+  playerDetailSnapshot = currentPlayerFormState();
+  if (!window.matchMedia('(min-width: 901px)').matches) closePlayerDetail(); // mobil: lukk popupen
   renderTeams();
   showTeamSaveStatus(teamId, (player.name || 'Spiller') + ' lagret ✓');
 });
@@ -1292,9 +1391,10 @@ document.getElementById('deletePlayerBtn').addEventListener('click', async () =>
   if (!currentPlayerContext) return;
   const { teamId, idx } = currentPlayerContext;
   const team = teams.find(t => t.id === teamId);
+  if (!confirm('Slette ' + (team.players[idx].name || 'spilleren') + '?')) return;
   team.players.splice(idx, 1);
   await DataStore.saveTeams(teams);
-  document.getElementById('playerDetailModal').classList.remove('show');
+  closePlayerDetail();
   renderTeams();
 });
 
