@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Caar Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --shell: #F5F0E3;
@@ -16,36 +19,99 @@
     --muted: #8B8570;
     --line: rgba(31,51,80,0.10);
     --line-strong: rgba(201,174,106,0.55);
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--shell);
+    background: #16263D;
     color: var(--navy);
-    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-family: Geist, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
     line-height: 1.5;
   }
-  .wrap { max-width: 1000px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
 
-  .app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1.1rem;
-    border-bottom: 1px solid var(--navy);
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 10px;
+  /* ---------- Appen (innlogget): lyseblå meny, marineblått innhold ---------- */
+  .app-shell {
+    --shell: #16263D;        /* flate og inndatafelt */
+    --shell-deep: #12203A;
+    --card: #1D3150;         /* kort */
+    --gold: #8EC5FF;         /* aksent (lyseblå) */
+    --gold-deep: #8EC5FF;
+    --accent: #8EC5FF;
+    --navy: #EEF2F8;         /* hovedtekst */
+    --navy-soft: #C3CFE0;
+    --muted: #A3B2C7;
+    --line: #2B4163;
+    --line-strong: #3A5276;
+    --ink: #16263D;          /* tekst på lyse flater */
+    --menu: #E6F0FB;
+    --menu-line: #C9DCF2;
+    --menu-muted: #4A5D78;
+    min-height: 100vh; display: flex; background: var(--shell); color: var(--navy);
   }
-  .club-name { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-deep); font-weight: 700; margin: 0 0 3px; }
-  .app-title { font-size: 24px; font-weight: 700; margin: 0; }
-  .role-switch { display: flex; gap: 6px; background: var(--shell-deep); padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
-  .role-switch button { font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 6px; border: none; background: transparent; color: var(--navy-soft); cursor: pointer; }
-  .role-switch button.active { background: var(--navy); color: var(--shell); }
+  .sidebar {
+    width: 236px; flex-shrink: 0; background: var(--menu); color: var(--ink);
+    border-right: 1px solid var(--menu-line); padding: 22px 14px;
+    display: flex; flex-direction: column; gap: 26px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+  .brand-name { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+  .club-name { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--menu-muted); margin: 0; }
+  nav.tabs { display: flex; flex-direction: column; gap: 2px; }
+  .nav-group { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; color: var(--menu-muted); padding: 0 10px 6px; }
+  .nav-group + button, .nav-group:first-child { margin-top: 0; }
+  #navAdminLabel { padding-top: 14px; }
+  nav.tabs button {
+    display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px;
+    border: none; border-radius: 8px; background: transparent; color: #3B4759;
+    font-family: inherit; font-size: 14px; text-align: left; cursor: pointer;
+  }
+  nav.tabs button:hover { background: rgba(22,38,61,0.06); }
+  nav.tabs button.active { background: var(--ink); color: #FFFFFF; font-weight: 500; box-shadow: inset 3px 0 0 var(--accent); }
+  nav.tabs svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-footer { margin-top: auto; border-top: 1px solid var(--menu-line); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .user-box { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+  .user-meta { flex: 1; min-width: 0; }
+  #userLabel { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { display: block; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; color: var(--menu-muted); }
+  .icon-btn { width: 44px; height: 44px; border: none; border-radius: 8px; background: transparent; color: #3B4759; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .icon-btn:hover { background: rgba(22,38,61,0.06); }
+  .role-switch { display: flex; gap: 4px; background: #FFFFFF; padding: 4px; border-radius: 8px; border: 1px solid var(--menu-line); }
+  .role-switch button { flex: 1; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 10px; border-radius: 6px; border: none; background: transparent; color: #3B4759; cursor: pointer; }
+  .role-switch button.active { background: var(--ink); color: #FFFFFF; }
 
-  nav.tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  nav.tabs button { font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--card); color: var(--navy-soft); cursor: pointer; }
-  nav.tabs button.active { background: var(--navy); color: var(--shell); border-color: var(--navy); }
+  .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 32px; min-height: 60px; border-bottom: 1px solid var(--line); }
+  .crumb { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .main-inner { width: 100%; max-width: 1120px; padding: 28px 32px 48px; }
+
+  /* Komponenter på mørk flate */
+  .app-shell .btn-primary { background: var(--accent); color: var(--ink); }
+  .app-shell .btn-secondary { background: rgba(142,197,255,0.12); color: #D6E8FF; border: 1px solid var(--line-strong); }
+  .app-shell .match-tag.upcoming { background: rgba(142,197,255,0.14); color: var(--accent); }
+  .app-shell .card-row .t-meta, .app-shell .match-row .match-date, .app-shell .player-tile .p-number, .app-shell .member-meta { font-family: var(--mono); }
+  .app-shell .field-row input:focus, .app-shell .field-row textarea:focus, .app-shell .field-row select:focus { outline: none; border-color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .app-shell { flex-direction: column; }
+    .sidebar { width: auto; height: auto; position: static; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-right: none; border-bottom: 1px solid var(--menu-line); overflow: visible; }
+    .sidebar-footer { margin: 0; border: none; padding: 0; flex-direction: row; align-items: center; }
+    .user-meta { display: none; }
+    .role-switch button { padding: 6px 8px; }
+    nav.tabs {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; flex-direction: row; gap: 0;
+      background: var(--menu); border-top: 1px solid var(--menu-line);
+      padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    }
+    .nav-group { display: none !important; }
+    nav.tabs button { flex: 1; flex-direction: column; justify-content: center; gap: 3px; min-height: 52px; padding: 4px 2px; font-size: 10.5px; text-align: center; color: var(--menu-muted); }
+    nav.tabs button.active { background: transparent; color: var(--ink); font-weight: 600; box-shadow: inset 0 -3px 0 var(--ink); border-radius: 0; }
+    .topbar { padding: 0 16px; min-height: 48px; }
+    .main-inner { padding: 18px 14px 100px; }
+  }
 
   .panel { display: none; }
   .panel.active { display: block; }
@@ -73,7 +139,7 @@
   .btn-danger { background: transparent; color: var(--muted); text-decoration: underline; font-weight: 400; }
   .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; align-items: center; }
   .save-status { font-size: 12.5px; font-weight: 600; color: var(--gold-deep); margin-right: auto; }
-  .save-status.error { color: #a34a2d; }
+  .save-status.error { color: #FF9B85; }
 
   .add-row {
     border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 14px;
@@ -178,10 +244,9 @@
   .footer-note { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 2.5rem; }
 
   /* Innlogging */
-  .user-box { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--navy-soft); }
-  .user-box .user-role { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: var(--navy); font-weight: 700; text-transform: uppercase; }
-  .user-box .btn { padding: 6px 10px; }
   .auth-screen {
+    --gold: #8EC5FF; --gold-deep: #8EC5FF;
+    --card: #FFFFFF; --shell: #F4F8FD; --line: #E3ECF7; --line-strong: #C9DCF2; --muted: #5D6B80;
     position: fixed; inset: 0; z-index: 40; overflow-y: auto;
     background: radial-gradient(ellipse at 20% 0%, #2B4468 0%, var(--navy) 55%, #142339 100%);
     color: var(--shell);
@@ -232,7 +297,7 @@
   .auth-input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(31,51,80,0.12); }
   .auth-link {
     background: none; border: none; padding: 0; font-family: inherit; font-size: 12.5px; font-weight: 600;
-    color: var(--gold-deep); cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+    color: #1F5FA8; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
   }
   .auth-message { font-size: 13px; color: #a34a2d; margin: 10px 0 8px; min-height: 1.2em; }
   .auth-message.ok { color: #6d8a3d; }
@@ -257,25 +322,6 @@
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <div class="app-header">
-    <div>
-      <p class="club-name" id="clubHeaderLabel"></p>
-      <h1 class="app-title">Caar Analytics</h1>
-    </div>
-    <!-- Rollebytte brukes bare i lokal modus (uten Firebase) -->
-    <div class="role-switch" id="roleSwitch" style="display:none;">
-      <button class="active" id="btn-admin">Admin</button>
-      <button id="btn-player">Spiller</button>
-    </div>
-    <!-- Innlogget bruker (Firebase-modus) -->
-    <div class="user-box" id="userBox" style="display:none;">
-      <span id="userLabel"></span>
-      <span class="user-role" id="userRole"></span>
-      <button class="btn btn-secondary" id="logoutBtn">Logg ut</button>
-    </div>
-  </div>
 
   <!-- INNLOGGING (fullskjerm) -->
   <div class="auth-screen" id="authScreen" style="display:none;">
@@ -341,14 +387,39 @@
     </div>
   </div>
 
-  <div id="appContent" style="display:none;">
-  <nav class="tabs">
-    <button class="active" data-tab="overview">Oversikt</button>
-    <button data-tab="teams">Motstanderlag</button>
-    <button data-tab="playbook">Playbook</button>
-    <button data-tab="access" id="accessTabBtn" style="display:none;">Tilganger</button>
-    <button data-tab="clubs" id="clubsTabBtn" style="display:none;">Klubber</button>
-  </nav>
+<div class="app-shell" id="appContent" style="display:none;">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="#16263D"></rect><line x1="13" y1="4" x2="13" y2="22" stroke="#8EC5FF" stroke-width="1.5"></line><path d="M4 8 A 6 6 0 0 1 4 18" fill="none" stroke="#8EC5FF" stroke-width="1.5"></path></svg>
+      <div><div class="brand-name">Caar Analytics</div><p class="club-name" id="clubHeaderLabel"></p></div>
+    </div>
+    <nav class="tabs" aria-label="Hovedmeny">
+      <div class="nav-group">Arbeidsområde</div>
+      <button class="active" data-tab="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg><span>Oversikt</span></button>
+      <button data-tab="teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M21 20v-2a4 4 0 0 0-3-3.9"></path></svg><span>Motstanderlag</span></button>
+      <button data-tab="playbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line><circle cx="7.5" cy="10" r="1.2"></circle><circle cx="16.5" cy="14" r="1.2"></circle></svg><span>Playbook</span></button>
+      <div class="nav-group" id="navAdminLabel" style="display:none;">Admin</div>
+      <button data-tab="access" id="accessTabBtn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9"></path><path d="M17 6l3 3"></path></svg><span>Tilganger</span></button>
+      <button data-tab="clubs" id="clubsTabBtn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M5 21V8l7-4 7 4v13"></path><path d="M10 21v-5h4v5"></path></svg><span>Klubber</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <!-- Rollebytte brukes bare i lokal modus (uten Firebase) -->
+      <div class="role-switch" id="roleSwitch" style="display:none;">
+        <button class="active" id="btn-admin">Admin</button>
+        <button id="btn-player">Spiller</button>
+      </div>
+      <!-- Innlogget bruker (Firebase-modus) -->
+      <div class="user-box" id="userBox" style="display:none;">
+        <span class="avatar" id="userAvatar" aria-hidden="true"></span>
+        <div class="user-meta"><span id="userLabel"></span><span class="user-role" id="userRole"></span></div>
+        <button class="icon-btn" id="logoutBtn" aria-label="Logg ut" title="Logg ut"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4"></path><path d="M10 8l-4 4 4 4"></path><path d="M6 12h10"></path></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <div class="topbar"><span class="crumb" id="crumb">Oversikt</span></div>
+    <div class="main-inner">
 
   <!-- OVERSIKT-PANEL -->
   <div class="panel active" id="panel-overview">
@@ -397,7 +468,7 @@
         <h3 style="margin:0 0 4px;font-size:16px;">Nytt motstanderlag</h3>
         <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Resten av detaljene legger du til på lagets side etterpå.</p>
         <div class="field-row"><label>Lagnavn *</label><input type="text" id="newTeamNameInput" placeholder="f.eks. IK Nordstjernen"></div>
-        <p id="newTeamError" style="font-size:12px;color:#a34a2d;margin:4px 0 0;display:none;">Lagnavn må fylles ut.</p>
+        <p id="newTeamError" style="font-size:12px;color:#FF9B85;margin:4px 0 0;display:none;">Lagnavn må fylles ut.</p>
         <div class="btn-row">
           <button class="btn btn-danger" id="cancelNewTeamBtn">Avbryt</button>
           <button class="btn btn-primary" id="saveNewTeamBtn">Opprett lag</button>
@@ -440,13 +511,13 @@
       <div class="playbook-board-col">
         <div class="board-container" id="boardContainer">
           <svg viewBox="0 0 400 260" preserveAspectRatio="none">
-            <rect x="0" y="0" width="400" height="260" fill="#FBF8F0"></rect>
+            <rect x="0" y="0" width="400" height="260" fill="#E6F0FB"></rect>
             <rect x="10" y="10" width="380" height="240" fill="none" stroke="#1F3350" stroke-width="2"></rect>
             <line x1="10" y1="130" x2="390" y2="130" stroke="#1F3350" stroke-width="1"></line>
             <path d="M 10 90 A 40 40 0 0 1 10 170" fill="none" stroke="#1F3350" stroke-width="1.5"></path>
             <path d="M 390 90 A 40 40 0 0 0 390 170" fill="none" stroke="#1F3350" stroke-width="1.5"></path>
-            <path d="M 10 65 A 65 65 0 0 1 10 195" fill="none" stroke="#C9AE6A" stroke-width="1" stroke-dasharray="4,3"></path>
-            <path d="M 390 65 A 65 65 0 0 0 390 195" fill="none" stroke="#C9AE6A" stroke-width="1" stroke-dasharray="4,3"></path>
+            <path d="M 10 65 A 65 65 0 0 1 10 195" fill="none" stroke="#5B8FD0" stroke-width="1" stroke-dasharray="4,3"></path>
+            <path d="M 390 65 A 65 65 0 0 0 390 195" fill="none" stroke="#5B8FD0" stroke-width="1" stroke-dasharray="4,3"></path>
             <rect x="4" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
             <rect x="388" y="105" width="8" height="50" fill="none" stroke="#1F3350" stroke-width="2"></rect>
           </svg>
@@ -505,10 +576,10 @@
       <div id="clubList"><p class="empty">Henter…</p></div>
     </div>
   </div>
-  </div><!-- /appContent -->
-
-  <p class="footer-note" id="footerNote"></p>
-</div>
+      <p class="footer-note" id="footerNote"></p>
+    </div>
+  </main>
+</div><!-- /appContent -->
 
 <script type="module">
 /* ============================================================
@@ -779,6 +850,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    document.getElementById('crumb').textContent = btn.textContent.trim();
     if (btn.dataset.tab === 'overview') renderOverview();
     if (btn.dataset.tab === 'playbook') { renderPresetList(); renderDots(); }
     if (btn.dataset.tab === 'access') renderAccess();
@@ -1271,8 +1343,8 @@ document.getElementById('addPresetRow').addEventListener('click', async () => {
 function renderDots() {
   const layer = document.getElementById('dotsLayer');
   layer.innerHTML = '';
-  const dotColor = playbookCategory === 'defense' ? '#1F3350' : '#C9AE6A';
-  const textColor = playbookCategory === 'defense' ? '#F5F0E3' : '#1F3350';
+  const dotColor = playbookCategory === 'defense' ? '#16263D' : '#3E7BC4';
+  const textColor = '#FFFFFF';
   boardPositions.forEach(pos => {
     const dot = document.createElement('div');
     dot.className = 'dot';
@@ -1340,7 +1412,7 @@ document.getElementById('resetBoardBtn').addEventListener('click', async () => {
 /* ---------- Klubbinnstillinger inn i markup ---------- */
 function applyClubConfig() {
   const c = clubSettings;
-  document.getElementById('clubHeaderLabel').textContent = c.headerLabel;
+  document.getElementById('clubHeaderLabel').textContent = c.clubName;
   document.getElementById('myTeamName').textContent = c.clubName;
   document.getElementById('myTeamNameInput').placeholder = c.placeholders.myTeamName;
   document.getElementById('myTeamModalIntro').textContent =
@@ -1635,7 +1707,7 @@ document.getElementById('createClubBtn').addEventListener('click', async () => {
 /* ---------- Oppstart av selve appen (etter innlogging i Firebase-modus) ---------- */
 async function startApp() {
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appContent').style.display = 'block';
+  document.getElementById('appContent').style.display = 'flex';
   clubSettings = await DataStore.getClubSettings();
   applyClubConfig();
   await loadTeams();
@@ -1730,8 +1802,11 @@ async function initFirebase() {
     document.getElementById('userLabel').textContent = currentMember.navn || epost;
     document.getElementById('userRole').textContent = isAdmin ? 'Admin' : 'Spiller';
     document.getElementById('userBox').style.display = 'flex';
-    document.getElementById('accessTabBtn').style.display = isAdmin ? 'inline-block' : 'none';
-    document.getElementById('clubsTabBtn').style.display = PLATFORM_OWNERS.includes(epost) ? 'inline-block' : 'none';
+    const isOwner = PLATFORM_OWNERS.includes(epost);
+    document.getElementById('accessTabBtn').style.display = isAdmin ? '' : 'none';
+    document.getElementById('clubsTabBtn').style.display = isOwner ? '' : 'none';
+    document.getElementById('navAdminLabel').style.display = (isAdmin || isOwner) ? '' : 'none';
+    document.getElementById('userAvatar').textContent = (currentMember.navn || epost).charAt(0).toUpperCase();
     document.getElementById('footerNote').textContent = 'Innlogget — data lagres i klubbens felles database';
     try {
       await startApp();
