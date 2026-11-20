@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// Sikkerhetsregler for Strategidatabase.
+// Limes inn i Firebase-konsollen: Firestore Database → Rules → Publish.
+//
+// Prinsipper:
+// - Dataene eies av klubben. Bare medlemmer av klubben kan lese dem.
+// - Bare admins kan skrive data og gi eller fjerne tilganger.
+// - En admin kan ikke fjerne eller nedgradere seg selv. Dermed finnes det
+//   alltid minst én admin igjen i klubben.
+// - E-posten må være bekreftet (Google-kontoer er alltid bekreftet).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function innlogget() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+
+    function minEpost() {
+      return request.auth.token.email.lower();
+    }
+
+    function mittMedlemskapPath() {
+      return /databases/$(database)/documents/medlemmer/$(minEpost());
+    }
+
+    function erMedlem(klubbId) {
+      return innlogget()
+        && exists(mittMedlemskapPath())
+        && get(mittMedlemskapPath()).data.klubbId == klubbId;
+    }
+
+    function erAdmin(klubbId) {
+      return erMedlem(klubbId)
+        && get(mittMedlemskapPath()).data.rolle == 'admin';
+    }
+
+    function gyldigMedlem(d) {
+      return d.keys().hasOnly(['epost', 'navn', 'rolle', 'klubbId', 'lagtTilAv', 'lagtTil'])
+        && d.rolle in ['admin', 'spiller']
+        && d.navn is string && d.navn.size() <= 100;
+    }
+
+    // Tilganger: én e-post hører til én klubb
+    match /medlemmer/{epost} {
+      allow read: if innlogget()
+        && (epost == minEpost() || erAdmin(resource.data.klubbId));
+
+      allow create: if erAdmin(request.resource.data.klubbId)
+        && epost == epost.lower()
+        && request.resource.data.epost == epost
+        && request.resource.data.lagtTilAv == minEpost()
+        && gyldigMedlem(request.resource.data);
+
+      allow update: if erAdmin(resource.data.klubbId)
+        && epost != minEpost()
+        && request.resource.data.klubbId == resource.data.klubbId
+        && request.resource.data.epost == resource.data.epost
+        && gyldigMedlem(request.resource.data);
+
+      allow delete: if erAdmin(resource.data.klubbId)
+        && epost != minEpost();
+    }
+
+    // Klubben og dataene dens
+    match /klubber/{klubbId} {
+      allow read: if erMedlem(klubbId);
+      allow update: if erAdmin(klubbId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['innstillinger']);
+
+      match /data/{dokument} {
+        allow read: if erMedlem(klubbId);
+        allow write: if erAdmin(klubbId);
+      }
+    }
+  }
+}

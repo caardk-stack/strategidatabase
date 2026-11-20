@@ -176,6 +176,31 @@
   .save-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
   .footer-note { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 2.5rem; }
+
+  /* Innlogging */
+  .user-box { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--navy-soft); }
+  .user-box .user-role { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: var(--navy); font-weight: 700; text-transform: uppercase; }
+  .user-box .btn { padding: 6px 10px; }
+  .auth-screen { max-width: 420px; margin: 1rem auto; }
+  .auth-card h2 { font-size: 18px; margin: 0 0 6px; }
+  .auth-intro { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+  .auth-wide { width: 100%; }
+  .auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 12px; color: var(--muted); }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
+  .auth-card .field-row label { width: 70px; }
+  .auth-message { font-size: 12.5px; color: #a34a2d; margin: 6px 0 0; min-height: 1em; }
+  .auth-message.ok { color: var(--gold-deep); }
+  .auth-card .btn-row { flex-wrap: wrap; }
+
+  /* Tilganger */
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-deep); margin: 0 0 10px; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+  .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .member-row:last-child { border-bottom: none; }
+  .member-info { flex: 1; min-width: 180px; }
+  .member-name { font-size: 14px; font-weight: 700; margin: 0; }
+  .member-meta { font-size: 11.5px; color: var(--muted); margin: 2px 0 0; }
+  .member-row select { font-family: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--shell); color: var(--navy); }
 </style>
 </head>
 <body>
@@ -186,16 +211,68 @@
       <p class="club-name" id="clubHeaderLabel"></p>
       <h1 class="app-title">Strategidatabase</h1>
     </div>
-    <div class="role-switch">
+    <!-- Rollebytte brukes bare i lokal modus (uten Firebase) -->
+    <div class="role-switch" id="roleSwitch" style="display:none;">
       <button class="active" id="btn-admin">Admin</button>
       <button id="btn-player">Spiller</button>
     </div>
+    <!-- Innlogget bruker (Firebase-modus) -->
+    <div class="user-box" id="userBox" style="display:none;">
+      <span id="userLabel"></span>
+      <span class="user-role" id="userRole"></span>
+      <button class="btn btn-secondary" id="logoutBtn">Logg ut</button>
+    </div>
   </div>
 
+  <!-- INNLOGGING -->
+  <div class="auth-screen" id="authScreen" style="display:none;">
+    <div class="card auth-card">
+      <div id="authLoading"><p class="empty">Laster…</p></div>
+
+      <div id="authLogin" style="display:none;">
+        <h2>Logg inn</h2>
+        <p class="auth-intro">Bruk e-postadressen treneren din har gitt tilgang til, enten med Google eller med e-post og passord.</p>
+        <button class="btn btn-primary auth-wide" id="googleLoginBtn">Logg inn med Google</button>
+        <div class="auth-divider">eller</div>
+        <div class="field-row"><label>E-post</label><input type="email" id="authEmail" autocomplete="email"></div>
+        <div class="field-row"><label>Passord</label><input type="password" id="authPassword" autocomplete="current-password"></div>
+        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="forgotPasswordBtn">Glemt passord?</button>
+          <button class="btn btn-secondary" id="signupBtn">Opprett konto</button>
+          <button class="btn btn-primary" id="emailLoginBtn">Logg inn</button>
+        </div>
+      </div>
+
+      <div id="authVerify" style="display:none;">
+        <h2>Bekreft e-postadressen</h2>
+        <p class="auth-intro">Vi har sendt en bekreftelseslenke til <strong id="verifyEmail"></strong>. Klikk lenken i e-posten, og kom tilbake hit. Sjekk søppelposten hvis du ikke finner den.</p>
+        <p class="auth-message" id="verifyMessage" role="status" aria-live="polite"></p>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="verifyLogoutBtn">Logg ut</button>
+          <button class="btn btn-secondary" id="resendVerifyBtn">Send på nytt</button>
+          <button class="btn btn-primary" id="checkVerifyBtn">Jeg har bekreftet</button>
+        </div>
+      </div>
+
+      <div id="authNoAccess" style="display:none;">
+        <h2>Ingen tilgang ennå</h2>
+        <p class="auth-intro">Du er logget inn som <strong id="noAccessEmail"></strong>, men denne e-postadressen har ikke fått tilgang til noen klubb. Be en trener i klubben din legge den til under «Tilganger».</p>
+        <p class="auth-message" id="noAccessMessage"></p>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="noAccessLogoutBtn">Logg ut</button>
+          <button class="btn btn-primary" id="noAccessRetryBtn">Prøv igjen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appContent" style="display:none;">
   <nav class="tabs">
     <button class="active" data-tab="overview">Oversikt</button>
     <button data-tab="teams">Motstanderlag</button>
     <button data-tab="playbook">Playbook</button>
+    <button data-tab="access" id="accessTabBtn" style="display:none;">Tilganger</button>
   </nav>
 
   <!-- OVERSIKT-PANEL -->
@@ -222,7 +299,7 @@
     </div>
   </div>
 
-  <!-- KLUBBINNSTILLINGER (beholdes til Firebase; knappen er skjult til admin-innlogging finnes) -->
+  <!-- KLUBBINNSTILLINGER («endre» vises bare for innlogget admin i Firebase-modus) -->
   <div class="modal-overlay" id="myTeamModal">
     <div class="modal-box">
       <h3 style="margin:0 0 4px;font-size:16px;">Sett opp «Mitt lag»</h3>
@@ -311,10 +388,35 @@
     </div>
   </div>
 
-  <p class="footer-note">Lokal lagring aktiv — kobles til delt database senere</p>
+  <!-- TILGANGER-PANEL (bare admin, Firebase-modus) -->
+  <div class="panel" id="panel-access">
+    <div class="card">
+      <h3 class="section-label">Gi tilgang</h3>
+      <p class="hint">Personen logger inn med akkurat denne e-postadressen, enten med Google eller med e-post og passord.</p>
+      <div class="field-row"><label>E-post *</label><input type="email" id="newMemberEmail" placeholder="navn@eksempel.no"></div>
+      <div class="field-row"><label>Navn</label><input type="text" id="newMemberName" placeholder="f.eks. Ida Hansen"></div>
+      <div class="field-row"><label>Rolle</label>
+        <select id="newMemberRole">
+          <option value="spiller">Spiller (kan se)</option>
+          <option value="admin">Admin (kan se og redigere)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <span class="save-status" id="accessAddStatus" role="status" aria-live="polite"></span>
+        <button class="btn btn-primary" id="addMemberBtn">Gi tilgang</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-label">Personer med tilgang</h3>
+      <div id="memberList"><p class="empty">Henter…</p></div>
+    </div>
+  </div>
+  </div><!-- /appContent -->
+
+  <p class="footer-note" id="footerNote"></p>
 </div>
 
-<script>
+<script type="module">
 /* ============================================================
    KLUBBKONFIGURASJON — alt som er spesifikt for én klubb/liga.
    Før Firebase: eneste kilde til klubbinnstillingene.
@@ -341,15 +443,49 @@ const CLUB_CONFIG = {
 /* ============================================================ */
 
 /* ============================================================
-   DATALAG — all lagring går hit. Byttes ut ved Firebase-kobling.
+   FIREBASE-KONFIGURASJON — limes inn fra Firebase-konsollen
+   (Project settings → Your apps → firebaseConfig).
+   Disse verdiene er ikke hemmelige; tilgangen styres av
+   sikkerhetsreglene i firestore.rules.
+   Står apiKey tom, kjører appen i lokal modus som før
+   (localStorage, rollebytte, ingen innlogging).
    ============================================================ */
-const DataStore = {
+const FIREBASE_CONFIG = {
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: ''
+};
+const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+const USE_FIREBASE = !!FIREBASE_CONFIG.apiKey;
+/* ============================================================ */
+
+// Klubbens lagrede innstillinger legges oppå CLUB_CONFIG, så nye felt i koden
+// får en standardverdi selv om klubben lagret innstillingene før feltet fantes.
+function mergeClubSettings(saved) {
+  const s = saved || {};
+  return {
+    ...CLUB_CONFIG,
+    ...s,
+    league: { ...CLUB_CONFIG.league, ...(s.league || {}) },
+    placeholders: { ...CLUB_CONFIG.placeholders, ...(s.placeholders || {}) }
+  };
+}
+
+/* ============================================================
+   DATALAG — all lagring går hit. To utgaver med samme metoder:
+   LocalDataStore (nettleseren) og createFirebaseDataStore (felles database).
+   ============================================================ */
+const LocalDataStore = {
+  mode: 'local',
   // --- Klubbinnstillinger: eies av klubben, ikke av koden eller nettleseren ---
   async getClubSettings() {
-    return CLUB_CONFIG;   // Etter Firebase: les fra databasen
+    return CLUB_CONFIG;
   },
   canEditClubSettings() {
-    return false;         // Etter Firebase: true for innlogget admin
+    return false;
   },
   async saveClubSettings(settings) {
     throw new Error('Klubbinnstillinger kan ikke lagres før databasen er koblet til.');
@@ -388,9 +524,85 @@ const DataStore = {
     localStorage.setItem('nextMatch', JSON.stringify(match));
   }
 };
+
+/* Firebase-utgaven. Datamodell i Firestore:
+     medlemmer/{e-post}           → { epost, navn, rolle: 'admin'|'spiller', klubbId, lagtTilAv, lagtTil }
+     klubber/{klubbId}            → { navn, innstillinger }
+     klubber/{klubbId}/data/teams          → { teams: [...] }
+     klubber/{klubbId}/data/presets_{kat}  → { presets: [...] }
+     klubber/{klubbId}/data/nextMatch      → { match: {...} }
+   Aktivt playbook-mønster lagres fortsatt lokalt på hver enhet. */
+function createFirebaseDataStore(fs, db, member) {
+  const klubbId = member.klubbId;
+  const clubRef = fs.doc(db, 'klubber', klubbId);
+  const dataRef = (name) => fs.doc(db, 'klubber', klubbId, 'data', name);
+
+  async function readField(name, field, fallback) {
+    const snap = await fs.getDoc(dataRef(name));
+    return snap.exists() && snap.data()[field] !== undefined ? snap.data()[field] : fallback;
+  }
+  async function writeField(name, field, value) {
+    await fs.setDoc(dataRef(name), { [field]: value, endret: fs.serverTimestamp(), endretAv: member.epost });
+  }
+
+  return {
+    mode: 'firebase',
+
+    // --- Klubbinnstillinger ---
+    async getClubSettings() {
+      const snap = await fs.getDoc(clubRef);
+      return mergeClubSettings(snap.exists() ? snap.data().innstillinger : null);
+    },
+    canEditClubSettings() {
+      return member.rolle === 'admin';
+    },
+    async saveClubSettings(settings) {
+      await fs.updateDoc(clubRef, { innstillinger: settings });
+    },
+
+    // --- Motstanderlag ---
+    async getTeams() { return readField('teams', 'teams', []); },
+    async saveTeams(teams) { await writeField('teams', 'teams', teams); },
+
+    // --- Playbook ---
+    async getPresets(category) { return readField('presets_' + category, 'presets', null); },
+    async savePresets(category, presets) { await writeField('presets_' + category, 'presets', presets); },
+    async getActivePresetId(category) {
+      return localStorage.getItem('activePreset_' + klubbId + '_' + category) || null;
+    },
+    async setActivePresetId(category, id) {
+      localStorage.setItem('activePreset_' + klubbId + '_' + category, id);
+    },
+
+    // --- Neste kamp ---
+    async getNextMatch() { return readField('nextMatch', 'match', null); },
+    async saveNextMatch(match) { await writeField('nextMatch', 'match', match); },
+
+    // --- Tilganger (bare admin) ---
+    async listMembers() {
+      const q = fs.query(fs.collection(db, 'medlemmer'), fs.where('klubbId', '==', klubbId));
+      const snap = await fs.getDocs(q);
+      return snap.docs.map(d => d.data());
+    },
+    async addMember(epost, navn, rolle) {
+      await fs.setDoc(fs.doc(db, 'medlemmer', epost), {
+        epost, navn, rolle, klubbId, lagtTilAv: member.epost, lagtTil: fs.serverTimestamp()
+      });
+    },
+    async setMemberRole(epost, rolle) {
+      await fs.updateDoc(fs.doc(db, 'medlemmer', epost), { rolle });
+    },
+    async removeMember(epost) {
+      await fs.deleteDoc(fs.doc(db, 'medlemmer', epost));
+    }
+  };
+}
+
+let DataStore = LocalDataStore; // byttes til Firebase-utgaven etter innlogging
 /* ============================================================ */
 
-let clubSettings = CLUB_CONFIG; // erstattes av DataStore.getClubSettings() i init()
+let clubSettings = CLUB_CONFIG; // erstattes av DataStore.getClubSettings() i startApp()
+let currentMember = null;       // { epost, navn, rolle, klubbId } i Firebase-modus
 let isAdmin = true;
 let teams = [];
 let openTeamId = null;
@@ -445,6 +657,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'overview') renderOverview();
     if (btn.dataset.tab === 'playbook') { renderPresetList(); renderDots(); }
+    if (btn.dataset.tab === 'access') renderAccess();
   });
 });
 
@@ -1119,8 +1332,119 @@ function renderMyTeamMatches(events) {
   block.innerHTML = html || '<p class="empty">Ingen kamper å vise.</p>';
 }
 
-/* ---------- Init ---------- */
-async function init() {
+/* ---------- Tilganger (bare admin, Firebase-modus) ---------- */
+const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function formatAddedDate(ts) {
+  if (!ts || typeof ts.toDate !== 'function') return '';
+  return new Intl.DateTimeFormat(clubSettings.locale, {
+    day: 'numeric', month: 'short', year: 'numeric', timeZone: clubSettings.timeZone
+  }).format(ts.toDate());
+}
+
+function showAccessStatus(text, isError) {
+  const el = document.getElementById('accessAddStatus');
+  el.textContent = text;
+  el.classList.toggle('error', !!isError);
+  clearTimeout(el._timer);
+  if (!isError) el._timer = setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+let members = [];
+
+async function renderAccess() {
+  if (!isAdmin || DataStore.mode !== 'firebase') return;
+  const list = document.getElementById('memberList');
+  try {
+    members = await DataStore.listMembers();
+  } catch (err) {
+    list.innerHTML = '<p class="empty">Kunne ikke hente tilgangslisten. Prøv å laste siden på nytt.</p>';
+    return;
+  }
+  // Admins først, deretter alfabetisk på navn/e-post
+  members.sort((a, b) =>
+    (a.rolle === b.rolle ? 0 : a.rolle === 'admin' ? -1 : 1) ||
+    (a.navn || a.epost).localeCompare(b.navn || b.epost, clubSettings.locale));
+
+  if (!members.length) {
+    list.innerHTML = '<p class="empty">Ingen har tilgang ennå.</p>';
+    return;
+  }
+
+  list.innerHTML = members.map(m => {
+    const isMe = m.epost === currentMember.epost;
+    const meta = [m.navn ? m.epost : '', m.lagtTilAv ? 'lagt til av ' + m.lagtTilAv : '', formatAddedDate(m.lagtTil)]
+      .filter(Boolean).join(' · ');
+    const controls = isMe
+      ? '<span class="member-meta">Dette er deg</span>'
+      : '<select class="member-role-select" data-epost="' + escapeHtml(m.epost) + '">' +
+          '<option value="spiller"' + (m.rolle === 'spiller' ? ' selected' : '') + '>Spiller</option>' +
+          '<option value="admin"' + (m.rolle === 'admin' ? ' selected' : '') + '>Admin</option>' +
+        '</select>' +
+        '<button class="btn btn-danger member-remove-btn" data-epost="' + escapeHtml(m.epost) + '">Fjern</button>';
+    return '<div class="member-row">' +
+      '<div class="member-info"><p class="member-name">' + escapeHtml(m.navn || m.epost) + '</p><p class="member-meta">' + escapeHtml(meta) + '</p></div>' +
+      (isMe ? '<span class="match-tag upcoming">' + escapeHtml(m.rolle) + '</span>' : '') +
+      controls +
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('.member-role-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const m = members.find(x => x.epost === sel.dataset.epost);
+      const label = m.navn || m.epost;
+      const text = sel.value === 'admin'
+        ? 'Gi ' + label + ' admin-tilgang? Admins kan redigere alt og gi andre tilgang.'
+        : 'Endre ' + label + ' til spiller? Personen kan da bare se innholdet.';
+      if (!confirm(text)) { sel.value = m.rolle; return; }
+      try {
+        await DataStore.setMemberRole(m.epost, sel.value);
+        showAccessStatus('Rollen er endret ✓');
+      } catch (err) {
+        showAccessStatus('Kunne ikke endre rollen.', true);
+      }
+      renderAccess();
+    });
+  });
+
+  list.querySelectorAll('.member-remove-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const m = members.find(x => x.epost === btn.dataset.epost);
+      if (!confirm('Fjerne tilgangen til ' + (m.navn || m.epost) + '? Personen mister tilgangen med en gang.')) return;
+      try {
+        await DataStore.removeMember(m.epost);
+        showAccessStatus('Tilgangen er fjernet ✓');
+      } catch (err) {
+        showAccessStatus('Kunne ikke fjerne tilgangen.', true);
+      }
+      renderAccess();
+    });
+  });
+}
+
+document.getElementById('addMemberBtn').addEventListener('click', async () => {
+  const epost = document.getElementById('newMemberEmail').value.trim().toLowerCase();
+  const navn = document.getElementById('newMemberName').value.trim();
+  const rolle = document.getElementById('newMemberRole').value;
+  if (!VALID_EMAIL.test(epost)) { showAccessStatus('Skriv inn en gyldig e-postadresse.', true); return; }
+  if (members.some(m => m.epost === epost)) { showAccessStatus('Denne e-postadressen har allerede tilgang.', true); return; }
+  try {
+    await DataStore.addMember(epost, navn, rolle);
+    document.getElementById('newMemberEmail').value = '';
+    document.getElementById('newMemberName').value = '';
+    document.getElementById('newMemberRole').value = 'spiller';
+    showAccessStatus((navn || epost) + ' har fått tilgang ✓');
+    renderAccess();
+  } catch (err) {
+    // Avvist av sikkerhetsreglene: e-posten er som regel allerede knyttet til en annen klubb
+    showAccessStatus('Kunne ikke gi tilgang. E-postadressen kan allerede være knyttet til en annen klubb.', true);
+  }
+});
+
+/* ---------- Oppstart av selve appen (etter innlogging i Firebase-modus) ---------- */
+async function startApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
   clubSettings = await DataStore.getClubSettings();
   applyClubConfig();
   await loadTeams();
@@ -1129,6 +1453,201 @@ async function init() {
   await initMyTeam();
   document.getElementById('addPresetRow').style.display = isAdmin ? 'block' : 'none';
   window.addEventListener('resize', renderDots);
+}
+
+/* ---------- Innlogging (Firebase-modus) ---------- */
+function showAuthView(view) {
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+  ['authLoading', 'authLogin', 'authVerify', 'authNoAccess'].forEach(id => {
+    document.getElementById(id).style.display = id === view ? 'block' : 'none';
+  });
+}
+
+function setMessage(id, text, ok) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.classList.toggle('ok', !!ok);
+}
+
+// Norske feilmeldinger for de vanligste Firebase-feilkodene
+function authErrorText(err) {
+  const code = (err && err.code) || '';
+  const map = {
+    'auth/invalid-email': 'E-postadressen er ikke gyldig.',
+    'auth/missing-password': 'Skriv inn passordet.',
+    'auth/invalid-credential': 'Feil e-post eller passord.',
+    'auth/wrong-password': 'Feil e-post eller passord.',
+    'auth/user-not-found': 'Feil e-post eller passord.',
+    'auth/email-already-in-use': 'Det finnes allerede en konto med denne e-posten. Logg inn i stedet, eller bruk «Glemt passord?».',
+    'auth/weak-password': 'Passordet må ha minst 6 tegn.',
+    'auth/too-many-requests': 'For mange forsøk. Vent litt og prøv igjen.',
+    'auth/network-request-failed': 'Ingen nettforbindelse. Prøv igjen.',
+    'auth/popup-closed-by-user': 'Innloggingsvinduet ble lukket før du var ferdig.',
+    'auth/cancelled-popup-request': 'Innloggingsvinduet ble lukket før du var ferdig.',
+    'auth/unauthorized-domain': 'Denne nettadressen er ikke godkjent i Firebase (Authorized domains).',
+    'auth/operation-not-allowed': 'Denne innloggingsmåten er ikke slått på i Firebase.'
+  };
+  return map[code] || 'Noe gikk galt. Prøv igjen.';
+}
+
+async function initFirebase() {
+  showAuthView('authLoading');
+  const [appMod, authMod, fs] = await Promise.all([
+    import(FIREBASE_SDK + 'firebase-app.js'),
+    import(FIREBASE_SDK + 'firebase-auth.js'),
+    import(FIREBASE_SDK + 'firebase-firestore.js')
+  ]);
+  const app = appMod.initializeApp(FIREBASE_CONFIG);
+  const auth = authMod.getAuth(app);
+  const db = fs.getFirestore(app);
+  let started = false;
+
+  const usesPassword = (user) => user.providerData.some(p => p.providerId === 'password');
+
+  async function handleUser(user) {
+    if (!user) { showAuthView('authLogin'); return; }
+
+    // Konto med e-post og passord må bekrefte e-posten før den får lese data
+    if (usesPassword(user) && !user.emailVerified) {
+      document.getElementById('verifyEmail').textContent = user.email;
+      showAuthView('authVerify');
+      return;
+    }
+
+    showAuthView('authLoading');
+    const epost = (user.email || '').toLowerCase();
+    let snap;
+    try {
+      snap = await fs.getDoc(fs.doc(db, 'medlemmer', epost));
+    } catch (err) {
+      snap = null; // avvist av reglene = ingen tilgang
+    }
+    if (!snap || !snap.exists()) {
+      document.getElementById('noAccessEmail').textContent = epost;
+      setMessage('noAccessMessage', '');
+      showAuthView('authNoAccess');
+      return;
+    }
+
+    if (started) { location.reload(); return; } // annen bruker logget inn: start på nytt
+    started = true;
+    currentMember = { ...snap.data(), epost };
+    isAdmin = currentMember.rolle === 'admin';
+    DataStore = createFirebaseDataStore(fs, db, currentMember);
+
+    document.getElementById('userLabel').textContent = currentMember.navn || epost;
+    document.getElementById('userRole').textContent = isAdmin ? 'Admin' : 'Spiller';
+    document.getElementById('userBox').style.display = 'flex';
+    document.getElementById('accessTabBtn').style.display = isAdmin ? 'inline-block' : 'none';
+    document.getElementById('footerNote').textContent = 'Innlogget — data lagres i klubbens felles database';
+    try {
+      await startApp();
+    } catch (err) {
+      alert('Kunne ikke hente klubbens data. Last siden på nytt, og si fra til en admin hvis feilen fortsetter.');
+    }
+  }
+
+  authMod.onAuthStateChanged(auth, handleUser);
+
+  // --- Google ---
+  document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+    setMessage('authMessage', '');
+    const provider = new authMod.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      await authMod.signInWithPopup(auth, provider);
+    } catch (err) {
+      if (err.code === 'auth/popup-blocked') {
+        await authMod.signInWithRedirect(auth, provider);
+      } else {
+        setMessage('authMessage', authErrorText(err));
+      }
+    }
+  });
+
+  // --- E-post og passord ---
+  const emailInput = () => document.getElementById('authEmail').value.trim();
+  const passwordInput = () => document.getElementById('authPassword').value;
+
+  document.getElementById('emailLoginBtn').addEventListener('click', async () => {
+    setMessage('authMessage', '');
+    try {
+      await authMod.signInWithEmailAndPassword(auth, emailInput(), passwordInput());
+    } catch (err) {
+      setMessage('authMessage', authErrorText(err));
+    }
+  });
+  document.getElementById('authPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('emailLoginBtn').click();
+  });
+
+  document.getElementById('signupBtn').addEventListener('click', async () => {
+    setMessage('authMessage', '');
+    try {
+      const cred = await authMod.createUserWithEmailAndPassword(auth, emailInput(), passwordInput());
+      await authMod.sendEmailVerification(cred.user);
+      // onAuthStateChanged viser «Bekreft e-postadressen»
+    } catch (err) {
+      setMessage('authMessage', authErrorText(err));
+    }
+  });
+
+  document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
+    const epost = emailInput();
+    if (!epost) { setMessage('authMessage', 'Skriv inn e-postadressen først, og trykk «Glemt passord?» igjen.'); return; }
+    try {
+      await authMod.sendPasswordResetEmail(auth, epost);
+      setMessage('authMessage', 'Hvis det finnes en konto for ' + epost + ', har vi sendt en lenke for å lage nytt passord.', true);
+    } catch (err) {
+      setMessage('authMessage', authErrorText(err));
+    }
+  });
+
+  // --- Bekreftelse av e-post ---
+  document.getElementById('resendVerifyBtn').addEventListener('click', async () => {
+    try {
+      await authMod.sendEmailVerification(auth.currentUser);
+      setMessage('verifyMessage', 'Ny lenke er sendt ✓', true);
+    } catch (err) {
+      setMessage('verifyMessage', authErrorText(err));
+    }
+  });
+  document.getElementById('checkVerifyBtn').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    await user.reload();
+    if (!user.emailVerified) {
+      setMessage('verifyMessage', 'E-posten er ikke bekreftet ennå. Klikk lenken i e-posten først.');
+      return;
+    }
+    await user.getIdToken(true); // nytt token, så databasen ser at e-posten er bekreftet
+    handleUser(user);
+  });
+
+  // --- Ingen tilgang / logg ut ---
+  document.getElementById('noAccessRetryBtn').addEventListener('click', () => handleUser(auth.currentUser));
+  const logout = async () => { await authMod.signOut(auth); location.reload(); };
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('verifyLogoutBtn').addEventListener('click', logout);
+  document.getElementById('noAccessLogoutBtn').addEventListener('click', logout);
+}
+
+/* ---------- Init ---------- */
+async function init() {
+  if (!USE_FIREBASE) {
+    // Lokal modus: som før, med rollebytte og lagring i nettleseren
+    document.getElementById('roleSwitch').style.display = 'flex';
+    document.getElementById('footerNote').textContent = 'Lokal lagring aktiv — kobles til delt database senere';
+    await startApp();
+    return;
+  }
+  try {
+    await initFirebase();
+  } catch (err) {
+    showAuthView('authLogin');
+    setMessage('authMessage', 'Kunne ikke koble til innloggingstjenesten. Sjekk nettforbindelsen og last siden på nytt.');
+  }
 }
 init();
 </script>
