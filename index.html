@@ -172,6 +172,23 @@
   .import-url-row { display: flex; gap: 8px; margin-bottom: 10px; }
   .import-url-row input { flex: 1; font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--shell); color: var(--navy); }
   .import-status { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .player-tile .p-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: top; display: block; margin: 0 auto 6px; background: var(--shell-deep); }
+
+  /* Data fra Tophåndbold */
+  .tp-head { font-size: 12px; color: var(--muted); margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .tp-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .tp-kpi { background: var(--shell); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .tp-kpi .k-val { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+  .tp-kpi .k-lbl { font-size: 11px; color: var(--muted); }
+  .tp-bars .bar-row { display: grid; grid-template-columns: 120px 1fr 52px; gap: 8px; align-items: center; font-size: 12px; margin: 5px 0; }
+  .tp-bars .bar { height: 8px; background: var(--shell-deep); border-radius: 999px; overflow: hidden; }
+  .tp-bars .bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+  .tp-bars .bar-val { font-family: var(--mono); text-align: right; }
+  .tp-source { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .tp-source a { color: var(--accent); }
+  .player-stats { margin: 0 0 12px; }
+  .player-stats .ps-grid { display: grid; grid-template-columns: 1fr auto; gap: 3px 14px; font-size: 12px; }
+  .player-stats .ps-grid span:nth-child(even) { text-align: right; font-family: var(--mono); }
 
   .player-detail-fields .field-row textarea { min-height: 44px; }
   .toggle-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
@@ -210,6 +227,14 @@
   .match-tag { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; font-weight: 700; text-transform: uppercase; }
   .match-tag.upcoming { background: var(--gold); color: var(--navy); }
   .match-tag.played { background: var(--shell-deep); color: var(--muted); }
+  .match-tag.win { background: rgba(90, 200, 130, 0.18); color: #86E0A8; }
+  .match-tag.loss { background: rgba(240, 110, 110, 0.18); color: #F2A0A0; }
+  .match-tag.draw { background: var(--shell-deep); color: var(--muted); }
+  .match-row .match-right { display: flex; align-items: center; gap: 10px; }
+  .match-row .match-score { font-family: var(--mono); font-weight: 700; font-size: 14px; }
+  .match-row .match-links a { font-size: 11px; color: var(--accent); margin-right: 10px; text-decoration: none; }
+  .match-row .match-links a:hover { text-decoration: underline; }
+  .standing-line { font-size: 12px; color: var(--muted); margin: -4px 0 6px; font-family: var(--mono); }
 
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(31,51,80,0.45);
@@ -451,8 +476,11 @@
       <h3 style="margin:0 0 4px;font-size:16px;">Sett opp «Mitt lag»</h3>
       <p id="myTeamModalIntro" style="font-size:12.5px;color:var(--muted);margin:0 0 14px;"></p>
       <div class="field-row"><label>Lagnavn</label><input type="text" id="myTeamNameInput"></div>
-      <div class="field-row"><label>Kalenderlenke</label><input type="text" id="myTeamCalendarInput" placeholder="Lim inn kalenderlenke her"></div>
+      <div class="field-row"><label>Lagside på Tophåndbold</label><input type="text" id="myTeamTpInput" placeholder="https://tophaandbold.dk/tophaandbold-theme/teams/view/…"></div>
+      <p style="font-size:11px;color:var(--muted);margin:6px 0 12px;">Gir kampprogram, resultater og tabell automatisk. Finn den på tophaandbold.dk → Klubber → velg klubben → «Spillertrup», og kopier adressen.</p>
+      <div class="field-row"><label>Kalenderlenke (valgfritt)</label><input type="text" id="myTeamCalendarInput" placeholder="Brukes bare hvis lagsiden mangler"></div>
       <p id="myTeamCalendarHelp" style="font-size:11px;color:var(--muted);margin:6px 0 0;"></p>
+      <p id="myTeamSaveStatus" class="import-status" style="display:none;"></p>
       <div class="btn-row">
         <button class="btn btn-danger" id="cancelMyTeamBtn">Avbryt</button>
         <button class="btn btn-primary" id="saveMyTeamBtn">Lagre</button>
@@ -483,6 +511,7 @@
       <div class="modal-box">
         <h3 id="playerDetailName" style="margin:0 0 4px;font-size:16px;"></h3>
         <p id="playerDetailMeta" style="font-size:12.5px;color:var(--muted);margin:0 0 14px;"></p>
+        <div class="player-stats" id="playerStatsBlock"></div>
         <div class="player-detail-fields">
           <div class="field-row"><label>Styrker</label><textarea id="playerStrengthsInput" placeholder="F.eks. sterkt skudd fra 9m"></textarea></div>
           <div class="field-row"><label>Svakheter</label><textarea id="playerWeaknessesInput" placeholder="F.eks. svak i forsvar mot gjennombrudd"></textarea></div>
@@ -593,7 +622,11 @@ const CLUB_CONFIG = {
   headerLabel: 'Din håndballklubb',        // teksten over app-tittelen
   locale: 'nb-NO',                         // språk for ukedager og måneder i datoer
   timeZone: 'Europe/Copenhagen',           // IANA-tidssone for kampklokkeslett og «i dag»
-  calendarId: '',                          // NFH sin kalender-ID (Google Calendar) — FYLL INN
+  calendarId: '',                          // valgfri reserve: kalender-ID (Google Calendar)
+  // Lagets ID-er hos Tophåndbold. Settes fra «Mitt lag» → endre (lim inn lagsiden),
+  // så appen henter kampprogram, resultater og tabell selv.
+  // { teamPageUrl, year, league, leagueSlug, team }
+  tophaandbold: null,
   league: {
     name: 'Tophåndbold',
     calendarHelpUrl: 'https://tophaandbold.dk/klub-kalender',
@@ -938,6 +971,7 @@ function renderTeams() {
   });
 
   if (isAdmin) attachTeamEditHandlers();
+  loadOpenTeamStats();
 }
 
 /* Redigeringstilstand: tekstfeltene lagres i teamDraft mens man skriver, og skrives
@@ -989,6 +1023,9 @@ function renderTeamDetail(team) {
     '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
     '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
     '<div class="players-list">' + renderPlayersView(team) + '</div>' +
+    (team.tophaandbold && team.tophaandbold.team
+      ? '<div class="tp-team-stats" data-team-id="' + escapeHtml(team.id) + '"></div>'
+      : '') +
     (isAdmin
       ? '<div class="btn-row">' +
           '<span class="save-status" role="status" aria-live="polite"></span>' +
@@ -1016,7 +1053,10 @@ function renderPlayersView(team) {
 
 function renderPlayerTile(p, idx) {
   const star = p.keyPlayer ? '<span class="key-star">★</span>' : '';
-  return '<div class="player-tile" data-idx="' + idx + '">' + star +
+  const photo = p.photo
+    ? '<img class="p-photo" src="' + escapeHtml(p.photo) + '" alt="" loading="lazy" onerror="this.remove()">'
+    : '';
+  return '<div class="player-tile" data-idx="' + idx + '">' + star + photo +
     '<p class="p-number">#' + escapeHtml(p.number || '?') + '</p>' +
     '<p class="p-name">' + escapeHtml(p.name || 'Uten navn') + '</p>' +
     '<p class="p-position">' + escapeHtml(p.position || '') + '</p>' +
@@ -1120,23 +1160,22 @@ function attachTeamEditHandlers() {
       statusEl.style.display = 'block';
       statusEl.textContent = 'Henter spillertropp…';
       try {
-        const res = await fetch('/api/spillertropp?url=' + encodeURIComponent(url));
-        if (!res.ok) throw new Error('Henting feilet');
-        const data = await res.json();
+        const res = await fetch('/api/tophaandbold?type=roster&url=' + encodeURIComponent(url));
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Henting feilet');
         if (!data.players || !data.players.length) {
-          statusEl.textContent = 'Fant ingen spillere på siden. Sjekk at lenken er riktig.';
+          statusEl.textContent = 'Fant ingen spillere på siden. Sjekk at lenken går til lagets side med spillertroppen.';
           return;
         }
         const team = teams.find(t => t.id === id);
-        team.players = data.players.map(p => ({
-          number: p.number, name: p.name, position: p.position,
-          strengths: '', weaknesses: '', preferredDirection: '', keyPlayer: false
-        }));
+        team.players = mergeImportedPlayers(team.players || [], data.players);
+        if (data.tophaandbold && data.tophaandbold.team) team.tophaandbold = data.tophaandbold;
+        if (data.logo) team.logo = data.logo;
         await DataStore.saveTeams(teams);
         renderTeams();
         showTeamSaveStatus(id, data.players.length + ' spillere hentet ✓');
       } catch (err) {
-        statusEl.textContent = 'Kunne ikke hente spillertropp. Dette krever at appen er deployet (fungerer ikke lokalt uten server).';
+        statusEl.textContent = 'Kunne ikke hente spillertropp: ' + err.message;
       }
     });
   });
@@ -1196,7 +1235,13 @@ function openPlayerDetail(teamId, idx) {
   currentPlayerContext = { teamId, idx };
 
   document.getElementById('playerDetailName').textContent = '#' + (player.number || '?') + ' ' + (player.name || 'Uten navn');
-  document.getElementById('playerDetailMeta').textContent = player.position || '';
+  document.getElementById('playerDetailMeta').textContent = [
+    player.position,
+    player.age ? player.age + ' år' : '',
+    player.height ? player.height + ' cm' : '',
+    player.nationality
+  ].filter(Boolean).join(' · ');
+  loadPlayerStats(team, player);
   document.getElementById('playerStrengthsInput').value = player.strengths || '';
   document.getElementById('playerWeaknessesInput').value = player.weaknesses || '';
   document.getElementById('playerDirectionInput').value = player.preferredDirection || '';
@@ -1416,7 +1461,7 @@ function applyClubConfig() {
   document.getElementById('myTeamName').textContent = c.clubName;
   document.getElementById('myTeamNameInput').placeholder = c.placeholders.myTeamName;
   document.getElementById('myTeamModalIntro').textContent =
-    'Lim inn kalenderlenken for laget deres fra ' + c.league.name + ' sin klubkalender.';
+    'Koble laget til ' + c.league.name + ', så henter appen kampprogram, resultater og tabell selv.';
   document.getElementById('myTeamCalendarHelp').innerHTML =
     'Finn lenken på <a href="' + escapeHtml(c.league.calendarHelpUrl) + '" target="_blank" rel="noopener" style="color:var(--gold-deep);">' +
     escapeHtml(c.league.calendarHelpLabel) + '</a> → ' + escapeHtml(c.league.calendarHelpSteps);
@@ -1428,6 +1473,8 @@ function applyClubConfig() {
 document.getElementById('editMyTeamBtn').addEventListener('click', () => {
   document.getElementById('myTeamNameInput').value = clubSettings.clubName || '';
   document.getElementById('myTeamCalendarInput').value = clubSettings.calendarId || '';
+  document.getElementById('myTeamTpInput').value = (clubSettings.tophaandbold && clubSettings.tophaandbold.teamPageUrl) || '';
+  document.getElementById('myTeamSaveStatus').style.display = 'none';
   document.getElementById('myTeamModal').classList.add('show');
 });
 
@@ -1446,8 +1493,36 @@ function extractCalendarId(input) {
 document.getElementById('saveMyTeamBtn').addEventListener('click', async () => {
   const name = document.getElementById('myTeamNameInput').value.trim();
   const calendarInput = document.getElementById('myTeamCalendarInput').value.trim();
-  if (!name || !calendarInput) { alert('Fyll ut både lagnavn og kalenderlenke.'); return; }
-  const updated = { ...clubSettings, clubName: name, calendarId: extractCalendarId(calendarInput) };
+  const tpUrl = document.getElementById('myTeamTpInput').value.trim();
+  const statusEl = document.getElementById('myTeamSaveStatus');
+  if (!name || (!calendarInput && !tpUrl)) { alert('Fyll ut lagnavn og lagside på Tophåndbold (eller en kalenderlenke).'); return; }
+
+  let tophaandbold = clubSettings.tophaandbold || null;
+  const oldUrl = tophaandbold && tophaandbold.teamPageUrl;
+  if (!tpUrl) {
+    tophaandbold = null;
+  } else if (tpUrl !== oldUrl || !tophaandbold.team) {
+    // Slå opp lagets ID-er hos Tophåndbold én gang, så resten går direkte
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Henter laget fra Tophåndbold…';
+    try {
+      const res = await fetch('/api/tophaandbold?type=roster&url=' + encodeURIComponent(tpUrl));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Henting feilet');
+      if (!data.tophaandbold || !data.tophaandbold.team) throw new Error('Fant ikke laget på siden. Sjekk at lenken går til lagets spillertrupp.');
+      tophaandbold = data.tophaandbold;
+    } catch (err) {
+      statusEl.textContent = 'Kunne ikke hente laget: ' + err.message;
+      return;
+    }
+  }
+
+  const updated = {
+    ...clubSettings,
+    clubName: name,
+    calendarId: calendarInput ? extractCalendarId(calendarInput) : '',
+    tophaandbold
+  };
   try {
     await DataStore.saveClubSettings(updated);
     clubSettings = updated;
@@ -1455,13 +1530,19 @@ document.getElementById('saveMyTeamBtn').addEventListener('click', async () => {
     applyClubConfig();
     await initMyTeam();
   } catch (err) {
-    alert(err.message);
+    statusEl.style.display = 'block';
+    statusEl.textContent = err.message;
   }
 });
 
 async function initMyTeam() {
   document.getElementById('myTeamName').textContent = clubSettings.clubName;
   const block = document.getElementById('myTeamMatches');
+  const tp = clubSettings.tophaandbold;
+  if (tp && tp.team && tp.leagueSlug) {
+    await loadTophaandboldMatches(tp);
+    return;
+  }
   if (!clubSettings.calendarId) {
     block.innerHTML = '<p class="empty">Kampkalenderen er ikke satt opp ennå.</p>';
     return;
@@ -1525,6 +1606,180 @@ function renderMyTeamMatches(events) {
     html += '<div class="match-row"><div><p class="match-opponent">' + escapeHtml(e.summary) + '</p>' +
       '<p class="match-date">' + escapeHtml(formatMatchDate(e)) + '</p></div>' +
       '<span class="match-tag played">Spilt</span></div>';
+  });
+  block.innerHTML = html || '<p class="empty">Ingen kamper å vise.</p>';
+}
+
+/* ---------- Data fra Tophåndbold ---------- */
+const tpCache = {}; // svar fra /api/tophaandbold i denne økten
+
+async function tpFetch(params) {
+  const qs = new URLSearchParams(params).toString();
+  if (!tpCache[qs]) {
+    tpCache[qs] = fetch('/api/tophaandbold?' + qs).then(async res => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Kunne ikke hente fra Tophåndbold');
+      return data;
+    });
+    tpCache[qs].catch(() => { delete tpCache[qs]; }); // prøv igjen neste gang
+  }
+  return tpCache[qs];
+}
+
+// Ny import erstatter troppen, men beholder trenernes notater for spillere som fortsatt er der
+function mergeImportedPlayers(oldPlayers, imported) {
+  const norm = (s) => String(s || '').trim().toLowerCase();
+  return imported.map(p => {
+    const prev = oldPlayers.find(o => norm(o.name) === norm(p.name)) ||
+      oldPlayers.find(o => o.number && String(o.number) === String(p.number) && !imported.some(i => norm(i.name) === norm(o.name)));
+    return {
+      number: p.number, name: p.name, position: p.position,
+      photo: p.photo || '', age: p.age || null, height: p.height || '', nationality: p.nationality || '',
+      tpPlayerId: p.tpPlayerId || null,
+      strengths: prev ? prev.strengths || '' : '',
+      weaknesses: prev ? prev.weaknesses || '' : '',
+      preferredDirection: prev ? prev.preferredDirection || '' : '',
+      keyPlayer: prev ? !!prev.keyPlayer : false
+    };
+  });
+}
+
+function fmtNum(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  const n = Number(v);
+  if (isNaN(n)) return String(v);
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ',');
+}
+
+function statItem(groups, group, label) {
+  const list = groups && groups[group];
+  return list ? list.find(x => x.label === label) : null;
+}
+
+function renderTeamStats(data, team) {
+  const g = data.groups || {};
+  const games = statItem(g, 'Andet', 'Antal kampe');
+  const shots = statItem(g, 'Skud statistik', 'Antal skud');
+  const goals = statItem(g, 'Skud statistik', 'Mål');
+  const saves = statItem(g, 'Skud statistik', 'Redninger');
+  const tech = statItem(g, 'Tekniske fejl', 'Teknisk fejl i alt');
+  const susp = statItem(g, 'Andet', 'Udvisning');
+  const n = games && Number(games.value) > 0 ? Number(games.value) : null;
+  const perGame = (it) => (it && n ? fmtNum(Number(it.value) / n) : '—');
+
+  const kpis = [
+    ['Kamper', games ? fmtNum(games.value) : '—'],
+    ['Mål per kamp', goals && n ? fmtNum(goals.value / n) : '—'],
+    ['Skuddeffektivitet', goals ? fmtNum(goals.percent) + ' %' : '—'],
+    ['Keeper-redning', saves ? fmtNum(saves.percent) + ' %' : '—'],
+    ['Tekn. feil per kamp', perGame(tech)],
+    ['Utvisninger per kamp', perGame(susp)]
+  ];
+  const eff = (g['Effektivitet fra'] || []).slice().sort((a, b) => (b.percent || 0) - (a.percent || 0));
+  const tp = team.tophaandbold;
+  return '<p class="tp-head">Statistikk denne sesongen</p>' +
+    '<div class="tp-kpis">' + kpis.map(([l, v]) =>
+      '<div class="tp-kpi"><div class="k-val">' + escapeHtml(v) + '</div><div class="k-lbl">' + escapeHtml(l) + '</div></div>').join('') + '</div>' +
+    (eff.length
+      ? '<p class="tp-head">Skuddeffektivitet per posisjon</p><div class="tp-bars">' + eff.map(e =>
+          '<div class="bar-row"><span>' + escapeHtml(e.label) + '</span><div class="bar"><span style="width:' +
+          Math.max(0, Math.min(100, e.percent || 0)) + '%"></span></div><span class="bar-val">' + fmtNum(e.percent) + ' %</span></div>').join('') + '</div>'
+      : '') +
+    '<p class="tp-source">Kilde: Tophåndbold' + (shots ? ' · ' + fmtNum(shots.value) + ' skudd totalt' : '') +
+    (tp.teamPageUrl ? ' · <a href="' + escapeHtml(tp.teamPageUrl) + '" target="_blank" rel="noopener">lagside</a>' : '') + '</p>';
+}
+
+async function loadOpenTeamStats() {
+  const el = document.querySelector('#teamsList .card.open .tp-team-stats');
+  if (!el) return;
+  const team = teams.find(t => t.id === el.dataset.teamId);
+  if (!team || !team.tophaandbold) return;
+  const tp = team.tophaandbold;
+  el.innerHTML = '<p class="empty">Henter statistikk fra Tophåndbold…</p>';
+  try {
+    const data = await tpFetch({ type: 'team', year: tp.year, league: tp.league, team: tp.team });
+    if (el.isConnected) el.innerHTML = renderTeamStats(data, team);
+  } catch (err) {
+    if (el.isConnected) el.innerHTML = '<p class="empty">Kunne ikke hente statistikk akkurat nå.</p>';
+  }
+}
+
+async function loadPlayerStats(team, player) {
+  const block = document.getElementById('playerStatsBlock');
+  const tp = team.tophaandbold;
+  if (!tp || !tp.team || !player.tpPlayerId) { block.innerHTML = ''; return; }
+  block.innerHTML = '<p class="empty" style="padding:0;">Henter statistikk…</p>';
+  const wanted = currentPlayerContext;
+  try {
+    const data = await tpFetch({ type: 'player', year: tp.year, league: tp.league, team: tp.team, player: player.tpPlayerId });
+    if (currentPlayerContext !== wanted) return; // brukeren har åpnet en annen spiller
+    const season = (data.groups && data.groups['Sæson statistik']) || [];
+    const shown = season.filter(x => x.value !== 0 && x.value !== '0' && x.value !== null);
+    block.innerHTML = shown.length
+      ? '<p class="tp-head" style="margin-top:0;">Sesongstatistikk (Tophåndbold)</p><div class="ps-grid">' +
+        shown.map(x => '<span>' + escapeHtml(x.label) + '</span><span>' + escapeHtml(fmtNum(x.value)) + '</span>').join('') + '</div>'
+      : '<p class="empty" style="padding:0;">Ingen registrert statistikk denne sesongen.</p>';
+  } catch (err) {
+    if (currentPlayerContext === wanted) block.innerHTML = '<p class="empty" style="padding:0;">Kunne ikke hente statistikk akkurat nå.</p>';
+  }
+}
+
+async function loadTophaandboldMatches(tp) {
+  const block = document.getElementById('myTeamMatches');
+  block.innerHTML = '<p class="empty">Henter kampprogram fra Tophåndbold…</p>';
+  try {
+    const [program, standings] = await Promise.all([
+      tpFetch({ type: 'program', league: tp.leagueSlug, year: tp.year, team: tp.team }),
+      tpFetch({ type: 'standings', league: tp.leagueSlug }).catch(() => null)
+    ]);
+    renderTophaandboldMatches(program.matches || [], standings, tp);
+  } catch (err) {
+    block.innerHTML = '<p class="empty">Kunne ikke hente kampprogram akkurat nå. ' +
+      'Det krever at appen kjører på Vercel, ikke som lokal fil.</p>';
+  }
+}
+
+function renderTophaandboldMatches(matches, standings, tp) {
+  const block = document.getElementById('myTeamMatches');
+  if (!matches.length) { block.innerHTML = '<p class="empty">Ingen kamper funnet hos Tophåndbold.</p>'; return; }
+
+  // Hvilket av lagnavnene i programmet er vårt? Det som står i flest kamper.
+  const count = {};
+  matches.forEach(m => { count[m.home] = (count[m.home] || 0) + 1; count[m.away] = (count[m.away] || 0) + 1; });
+  const ours = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+
+  let html = '';
+  const row = standings && standings.table && standings.table.find(r => r.team === ours);
+  if (row) {
+    html += '<p class="standing-line">' + row.rank + '. plass · ' + row.points + ' poeng · ' +
+      row.won + '-' + row.drawn + '-' + row.lost + ' · målforskjell ' + escapeHtml(row.goals) + '</p>';
+  }
+
+  const upcoming = matches.filter(m => !m.played).slice(0, 3);
+  const played = matches.filter(m => m.played).slice(-3).reverse();
+
+  upcoming.forEach(m => {
+    const home = m.home === ours;
+    const opp = home ? m.away : m.home;
+    html += '<div class="match-row"><div><p class="match-opponent">' + (home ? '' : '@ ') + escapeHtml(opp) + '</p>' +
+      '<p class="match-date">' + escapeHtml(formatMatchDate(m)) + (home ? ' · hjemme' : ' · borte') + (m.tv ? ' · ' + escapeHtml(m.tv) : '') + '</p></div>' +
+      '<span class="match-tag upcoming">Kommende</span></div>';
+  });
+  played.forEach(m => {
+    const home = m.home === ours;
+    const opp = home ? m.away : m.home;
+    const us = home ? m.homeGoals : m.awayGoals;
+    const them = home ? m.awayGoals : m.homeGoals;
+    const result = us > them ? ['win', 'Seier'] : us < them ? ['loss', 'Tap'] : ['draw', 'Uavgjort'];
+    const links = [
+      m.livescoreUrl ? '<a href="' + escapeHtml(m.livescoreUrl) + '" target="_blank" rel="noopener">Hendelser</a>' : '',
+      m.reportPdf ? '<a href="' + escapeHtml(m.reportPdf) + '" target="_blank" rel="noopener">Kamprapport (PDF)</a>' : ''
+    ].join('');
+    html += '<div class="match-row"><div><p class="match-opponent">' + (home ? '' : '@ ') + escapeHtml(opp) + '</p>' +
+      '<p class="match-date">' + escapeHtml(formatMatchDate(m)) + '</p>' +
+      (links ? '<p class="match-links">' + links + '</p>' : '') + '</div>' +
+      '<div class="match-right"><span class="match-score">' + us + '–' + them + '</span>' +
+      '<span class="match-tag ' + result[0] + '">' + result[1] + '</span></div></div>';
   });
   block.innerHTML = html || '<p class="empty">Ingen kamper å vise.</p>';
 }
