@@ -181,16 +181,69 @@
   .user-box { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--navy-soft); }
   .user-box .user-role { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: var(--navy); font-weight: 700; text-transform: uppercase; }
   .user-box .btn { padding: 6px 10px; }
-  .auth-screen { max-width: 420px; margin: 1rem auto; }
-  .auth-card h2 { font-size: 18px; margin: 0 0 6px; }
-  .auth-intro { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
-  .auth-wide { width: 100%; }
-  .auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; font-size: 12px; color: var(--muted); }
+  .auth-screen {
+    position: fixed; inset: 0; z-index: 40; overflow-y: auto;
+    background: radial-gradient(ellipse at 20% 0%, #2B4468 0%, var(--navy) 55%, #142339 100%);
+    color: var(--shell);
+  }
+  .auth-court {
+    position: fixed; inset: -6%; width: 112%; height: 112%;
+    color: var(--gold-deep); opacity: 0.16; transform: rotate(-8deg); pointer-events: none;
+  }
+  .auth-layout {
+    position: relative; min-height: 100vh; max-width: 1040px; margin: 0 auto;
+    padding: 3rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 3rem;
+  }
+  .auth-brand { flex: 1; max-width: 520px; }
+  .auth-kicker { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 14px; }
+  .auth-title {
+    font-size: clamp(40px, 7vw, 76px); line-height: 0.95; font-weight: 900; letter-spacing: -0.02em;
+    text-transform: uppercase; margin: 0; color: var(--shell);
+  }
+  .auth-bar { width: 84px; height: 6px; background: var(--gold-deep); margin: 22px 0 18px; border-radius: 3px; }
+  .auth-tagline { font-size: 17px; line-height: 1.5; color: rgba(245,240,227,0.78); margin: 0; max-width: 400px; }
+
+  .auth-card {
+    width: 100%; max-width: 400px; flex-shrink: 0;
+    background: var(--card); color: var(--navy); border-radius: 14px; padding: 2rem 1.75rem 1.5rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35); border-top: 5px solid var(--gold-deep);
+  }
+  .auth-card h2 { font-size: 22px; font-weight: 800; margin: 0 0 6px; }
+  .auth-intro { font-size: 13.5px; color: var(--muted); margin: 0 0 20px; }
+  .auth-btn {
+    display: block; width: 100%; font-family: inherit; font-size: 15px; font-weight: 700;
+    padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: transform 0.08s, filter 0.15s;
+  }
+  .auth-btn:hover { filter: brightness(1.06); }
+  .auth-btn:active { transform: translateY(1px); }
+  .auth-btn-primary { background: var(--navy); color: var(--shell); border: none; margin-top: 4px; }
+  .auth-btn-google { background: #fff; color: var(--navy); border: 1.5px solid var(--line-strong); }
+  .auth-divider {
+    display: flex; align-items: center; gap: 10px; margin: 20px 0 14px;
+    font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  }
   .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-top: 1px solid var(--line); }
-  .auth-card .field-row label { width: 70px; }
-  .auth-message { font-size: 12.5px; color: #a34a2d; margin: 6px 0 0; min-height: 1em; }
-  .auth-message.ok { color: var(--gold-deep); }
-  .auth-card .btn-row { flex-wrap: wrap; }
+  .auth-label { display: block; font-size: 12px; font-weight: 700; color: var(--navy-soft); margin: 0 0 5px; }
+  .auth-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
+  .auth-input {
+    width: 100%; font-family: inherit; font-size: 15px; padding: 11px 12px;
+    border: 1.5px solid var(--line-strong); border-radius: 8px; background: var(--shell); color: var(--navy);
+  }
+  .auth-input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(31,51,80,0.12); }
+  .auth-link {
+    background: none; border: none; padding: 0; font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--gold-deep); cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .auth-message { font-size: 13px; color: #a34a2d; margin: 10px 0 8px; min-height: 1.2em; }
+  .auth-message.ok { color: #6d8a3d; }
+  .auth-footer { font-size: 13px; color: var(--muted); text-align: center; margin: 16px 0 0; }
+  @media (max-width: 760px) {
+    .auth-layout { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 1.75rem; padding: 2rem 1.1rem 2.5rem; }
+    .auth-brand { max-width: none; }
+    .auth-bar { margin: 14px 0 12px; }
+    .auth-tagline { font-size: 15px; }
+    .auth-card { max-width: none; padding: 1.5rem 1.25rem 1.25rem; }
+  }
 
   /* Tilganger */
   .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold-deep); margin: 0 0 10px; }
@@ -224,44 +277,65 @@
     </div>
   </div>
 
-  <!-- INNLOGGING -->
+  <!-- INNLOGGING (fullskjerm) -->
   <div class="auth-screen" id="authScreen" style="display:none;">
-    <div class="card auth-card">
-      <div id="authLoading"><p class="empty">Laster…</p></div>
+    <svg class="auth-court" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect x="10" y="10" width="380" height="240" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+      <line x1="200" y1="10" x2="200" y2="250" stroke="currentColor" stroke-width="1.2"></line>
+      <circle cx="200" cy="130" r="3" fill="currentColor"></circle>
+      <path d="M 10 70 A 60 60 0 0 1 70 130 A 60 60 0 0 1 10 190" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+      <path d="M 390 70 A 60 60 0 0 0 330 130 A 60 60 0 0 0 390 190" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+      <path d="M 10 50 A 80 80 0 0 1 90 130 A 80 80 0 0 1 10 210" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5,4"></path>
+      <path d="M 390 50 A 80 80 0 0 0 310 130 A 80 80 0 0 0 390 210" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5,4"></path>
+      <rect x="4" y="115" width="6" height="30" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+      <rect x="390" y="115" width="6" height="30" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+    </svg>
 
-      <div id="authLogin" style="display:none;">
-        <h2>Logg inn</h2>
-        <p class="auth-intro">Bruk e-postadressen treneren din har gitt tilgang til, enten med Google eller med e-post og passord.</p>
-        <button class="btn btn-primary auth-wide" id="googleLoginBtn">Logg inn med Google</button>
-        <div class="auth-divider">eller</div>
-        <div class="field-row"><label>E-post</label><input type="email" id="authEmail" autocomplete="email"></div>
-        <div class="field-row"><label>Passord</label><input type="password" id="authPassword" autocomplete="current-password"></div>
-        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
-        <div class="btn-row">
-          <button class="btn btn-danger" id="forgotPasswordBtn">Glemt passord?</button>
-          <button class="btn btn-secondary" id="signupBtn">Opprett konto</button>
-          <button class="btn btn-primary" id="emailLoginBtn">Logg inn</button>
-        </div>
+    <div class="auth-layout">
+      <div class="auth-brand">
+        <p class="auth-kicker">Håndball · Taktikk · Kampforberedelse</p>
+        <h1 class="auth-title">Strategi&shy;database</h1>
+        <div class="auth-bar"></div>
+        <p class="auth-tagline">Motstanderrapporter, playbook og kampplan – samlet for hele laget.</p>
       </div>
 
-      <div id="authVerify" style="display:none;">
-        <h2>Bekreft e-postadressen</h2>
-        <p class="auth-intro">Vi har sendt en bekreftelseslenke til <strong id="verifyEmail"></strong>. Klikk lenken i e-posten, og kom tilbake hit. Sjekk søppelposten hvis du ikke finner den.</p>
-        <p class="auth-message" id="verifyMessage" role="status" aria-live="polite"></p>
-        <div class="btn-row">
-          <button class="btn btn-danger" id="verifyLogoutBtn">Logg ut</button>
-          <button class="btn btn-secondary" id="resendVerifyBtn">Send på nytt</button>
-          <button class="btn btn-primary" id="checkVerifyBtn">Jeg har bekreftet</button>
-        </div>
-      </div>
+      <div class="auth-card">
+        <div id="authLoading"><p class="auth-intro">Laster…</p></div>
 
-      <div id="authNoAccess" style="display:none;">
-        <h2>Ingen tilgang ennå</h2>
-        <p class="auth-intro">Du er logget inn som <strong id="noAccessEmail"></strong>, men denne e-postadressen har ikke fått tilgang til noen klubb. Be en trener i klubben din legge den til under «Tilganger».</p>
-        <p class="auth-message" id="noAccessMessage"></p>
-        <div class="btn-row">
-          <button class="btn btn-danger" id="noAccessLogoutBtn">Logg ut</button>
-          <button class="btn btn-primary" id="noAccessRetryBtn">Prøv igjen</button>
+        <div id="authLogin" style="display:none;">
+          <h2>Logg inn</h2>
+          <p class="auth-intro">Bruk e-postadressen treneren din har gitt tilgang til.</p>
+          <button class="auth-btn auth-btn-google" id="googleLoginBtn">Fortsett med Google</button>
+          <div class="auth-divider">eller med e-post</div>
+          <label class="auth-label" for="authEmail">E-post</label>
+          <input class="auth-input" type="email" id="authEmail" autocomplete="email" placeholder="navn@eksempel.no">
+          <div class="auth-label-row">
+            <label class="auth-label" for="authPassword">Passord</label>
+            <button class="auth-link" id="forgotPasswordBtn" type="button">Glemt passord?</button>
+          </div>
+          <input class="auth-input" type="password" id="authPassword" autocomplete="current-password">
+          <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+          <button class="auth-btn auth-btn-primary" id="emailLoginBtn">Logg inn</button>
+          <p class="auth-footer">Første gang her? <button class="auth-link" id="signupBtn" type="button">Opprett konto</button></p>
+        </div>
+
+        <div id="authVerify" style="display:none;">
+          <h2>Bekreft e-posten din</h2>
+          <p class="auth-intro">Vi har sendt en bekreftelseslenke til <strong id="verifyEmail"></strong>. Klikk lenken i e-posten, og kom tilbake hit. Sjekk søppelposten hvis du ikke finner den.</p>
+          <p class="auth-message" id="verifyMessage" role="status" aria-live="polite"></p>
+          <button class="auth-btn auth-btn-primary" id="checkVerifyBtn">Jeg har bekreftet</button>
+          <p class="auth-footer">
+            <button class="auth-link" id="resendVerifyBtn" type="button">Send lenken på nytt</button> ·
+            <button class="auth-link" id="verifyLogoutBtn" type="button">Logg ut</button>
+          </p>
+        </div>
+
+        <div id="authNoAccess" style="display:none;">
+          <h2>Ingen tilgang ennå</h2>
+          <p class="auth-intro">Du er logget inn som <strong id="noAccessEmail"></strong>, men denne e-postadressen har ikke fått tilgang til noen klubb. Be en trener i klubben din legge den til under «Tilganger».</p>
+          <p class="auth-message" id="noAccessMessage"></p>
+          <button class="auth-btn auth-btn-primary" id="noAccessRetryBtn">Prøv igjen</button>
+          <p class="auth-footer"><button class="auth-link" id="noAccessLogoutBtn" type="button">Logg ut og bruk en annen konto</button></p>
         </div>
       </div>
     </div>
