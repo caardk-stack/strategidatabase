@@ -122,6 +122,7 @@ async function getRoster(url) {
 
   const chunks = html.split(/<div class="team__player">/).slice(1);
   const players = [];
+  const staff = [];
   let ids = null;
   let logo = '';
 
@@ -158,9 +159,16 @@ async function getRoster(url) {
       if (!ids && stats.team) ids = { year: stats.year, league: stats.league, team: stats.team };
     }
 
+    const position = pm ? pm[2].trim() : posText;
+    // Trenere og støtteapparat står i samme liste på Tophåndbold
+    if (/tr(æ|ae)ner|leder|manager|fysioterapeut|massør|direktør|coach/i.test(position)) {
+      staff.push({ name, role: position });
+      continue;
+    }
+
     players.push({
       number: pm ? pm[1] : '',
-      position: pm ? pm[2].trim() : posText,
+      position,
       name,
       photo: photoMatch ? absUrl(photoMatch[1].split('?')[0]) : '',
       born: born.replace(/\s*\(\d+\s*år\)/, ''),
@@ -184,7 +192,8 @@ async function getRoster(url) {
     teamName,
     logo,
     tophaandbold: ids ? { ...ids, leagueSlug: LEAGUE_SLUGS[ids.league] || null, teamPageUrl: url } : { teamPageUrl: url },
-    players: unique
+    players: unique,
+    staff
   };
 }
 

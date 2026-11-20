@@ -1023,6 +1023,9 @@ function renderTeamDetail(team) {
     '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
     '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
     '<div class="players-list">' + renderPlayersView(team) + '</div>' +
+    (team.staff && team.staff.length
+      ? '<p class="tp-source">Trenere: ' + team.staff.map(m => escapeHtml(m.name) + ' (' + escapeHtml(m.role.toLowerCase()) + ')').join(', ') + '</p>'
+      : '') +
     (team.tophaandbold && team.tophaandbold.team
       ? '<div class="tp-team-stats" data-team-id="' + escapeHtml(team.id) + '"></div>'
       : '') +
@@ -1171,6 +1174,7 @@ function attachTeamEditHandlers() {
         team.players = mergeImportedPlayers(team.players || [], data.players);
         if (data.tophaandbold && data.tophaandbold.team) team.tophaandbold = data.tophaandbold;
         if (data.logo) team.logo = data.logo;
+        team.staff = data.staff || [];
         await DataStore.saveTeams(teams);
         renderTeams();
         showTeamSaveStatus(id, data.players.length + ' spillere hentet ✓');
