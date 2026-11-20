@@ -1,5 +1,15 @@
 # Firebase-oppsett for Strategidatabase
 
+## Hvor ting ligger (én av hver)
+| Tjeneste | Konto / navn | Merknad |
+|---|---|---|
+| GitHub | `caardk-stack/strategidatabase` | Eneste repo for koden. Vercel og Claude er koblet hit. |
+| Vercel | prosjektet `strategidatabase-app` → https://strategidatabase-app.vercel.app | Innlogget med GitHub-kontoen `caardk-stack`. `main` = produksjon, andre grener = testversjoner (preview). |
+| Firebase | prosjektet `strategidatabase` | Authentication (Google + e-post/passord) og Firestore i EU. |
+
+Utdaterte duplikater som ikke skal brukes: GitHub-kontoen `carolineaarjakobsen-glitch` (repoene `strategidatabase` og
+`strategidatabase-app`) og Vercel-prosjektet `strategidatabase`.
+
 Appen kjører i **lokal modus** (lagring i nettleseren, rollebytte, ingen innlogging) så lenge
 `FIREBASE_CONFIG.apiKey` i `index.html` er tom. Når konfigurasjonen er fylt inn, krever appen innlogging
 og lagrer alt i klubbens felles database.
