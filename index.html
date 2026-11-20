@@ -205,6 +205,8 @@
   .player-sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
   .sheet-close { width: 36px; height: 36px; flex-shrink: 0; border: none; border-radius: 8px; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; cursor: pointer; }
   .sheet-close:hover { background: rgba(142,197,255,0.12); color: var(--navy); }
+  .sheet-title { flex: 1; min-width: 0; }
+  .sheet-photo { display: none; }
   .sheet-hint { display: none; font-size: 12px; color: var(--muted); margin: -4px 0 12px; }
   .player-detail-fields .field-row input { min-width: 0; }
   .player-tile.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
@@ -217,6 +219,8 @@
     }
     .player-sheet .btn-row { position: sticky; bottom: -1.5rem; background: var(--card); padding: 12px 0 1.5rem; margin-top: auto; border-top: 1px solid var(--line); }
     .sheet-hint { display: block; }
+    .sheet-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: top; background: var(--shell-deep); flex-shrink: 0; }
+    .sheet-photo.has-photo { display: block !important; }
     body.player-panel-open .main-area { padding-right: 440px; }
   }
   @media (max-width: 900px) {
@@ -543,7 +547,8 @@
     <div class="modal-overlay player-sheet-overlay" id="playerDetailModal">
       <div class="modal-box player-sheet" role="dialog" aria-labelledby="playerDetailName">
         <div class="player-sheet-head">
-          <div>
+          <img id="playerDetailPhoto" class="sheet-photo" alt="" style="display:none;">
+          <div class="sheet-title">
             <h3 id="playerDetailName" style="margin:0 0 4px;font-size:16px;"></h3>
             <p id="playerDetailMeta" style="font-size:12.5px;color:var(--muted);margin:0;"></p>
           </div>
@@ -552,6 +557,11 @@
         <p class="sheet-hint">Klikk på en annen spiller i listen for å bytte.</p>
         <div class="player-stats" id="playerStatsBlock"></div>
         <div class="player-detail-fields">
+          <div class="field-row"><label>Foretrukket retning</label><input type="text" id="playerDirectionInput" placeholder="F.eks. venstre, høyre, midtstilt"></div>
+          <div class="toggle-row" style="margin-bottom:16px;">
+            <div class="toggle-switch" id="keyPlayerToggle"><div class="knob"></div></div>
+            <span class="toggle-label">Nøkkelspiller</span>
+          </div>
           <div class="analysis-field">
             <label for="playerStrengthsInput">Styrker</label>
             <textarea id="playerStrengthsInput" rows="7" placeholder="Skriv analysen her. F.eks.:&#10;– Sterkt skudd fra 9 m, særlig lavt i hjørnet&#10;– Rask i kontring, løper ofte første bølge&#10;– Søker 1:1 mot venstre"></textarea>
@@ -560,16 +570,24 @@
             <label for="playerWeaknessesInput">Svakheter</label>
             <textarea id="playerWeaknessesInput" rows="7" placeholder="Skriv analysen her. F.eks.:&#10;– Svak i forsvar mot gjennombrudd&#10;– Mister ballen under press fra offensiv 5:1&#10;– Sliter i returløp"></textarea>
           </div>
-          <div class="field-row"><label>Foretrukket retning</label><input type="text" id="playerDirectionInput" placeholder="F.eks. venstre, høyre, midtstilt"></div>
-          <div class="toggle-row">
-            <div class="toggle-switch" id="keyPlayerToggle"><div class="knob"></div></div>
-            <span class="toggle-label">Nøkkelspiller</span>
-          </div>
         </div>
         <div class="btn-row">
           <button class="btn btn-danger" id="deletePlayerBtn">Slett spiller</button>
           <button class="btn btn-secondary" id="cancelPlayerDetailBtn">Lukk</button>
           <button class="btn btn-primary" id="savePlayerDetailBtn">Lagre</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ULAGREDE ENDRINGER-POPUP -->
+    <div class="modal-overlay" id="unsavedPlayerModal" style="z-index:60;">
+      <div class="modal-box">
+        <h3 style="margin:0 0 6px;font-size:16px;">Ulagrede endringer</h3>
+        <p id="unsavedPlayerText" style="font-size:13px;color:var(--muted);margin:0 0 14px;"></p>
+        <div class="btn-row">
+          <button class="btn btn-danger" id="unsavedCancelBtn">Avbryt</button>
+          <button class="btn btn-secondary" id="unsavedDiscardBtn">Forkast</button>
+          <button class="btn btn-primary" id="unsavedSaveBtn">Lagre</button>
         </div>
       </div>
     </div>
@@ -923,9 +941,9 @@ function setRole(admin) {
 
 /* ---------- Faner ---------- */
 document.querySelectorAll('nav.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     if (isPlayerPanelOpen()) {
-      if (!confirmLeavePlayerDetail()) return;
+      if (!(await confirmLeavePlayerDetail())) return;
       closePlayerDetail();
     }
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
@@ -1070,13 +1088,16 @@ function renderTeamDetail(team) {
   return '<div class="field-row"><label>Formasjon</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.formation || '—') + '</p></div>' +
     '<div class="field-row"><label>Neste kamp</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.nextMatchDate || '—') + '</p></div>' +
     '<div class="field-row"><label>Notater</label><p style="margin:0;font-size:13.5px;">' + escapeHtml(team.notes || '—') + '</p></div>' +
+    (team.tophaandbold && team.tophaandbold.team
+      ? '<div class="tp-team-stats" data-team-id="' + escapeHtml(team.id) + '"></div>'
+      : '') +
     '<p style="font-size:12px;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Spillere</p>' +
     '<div class="players-list">' + renderPlayersView(team) + '</div>' +
     (team.staff && team.staff.length
       ? '<p class="tp-source">Trenere: ' + team.staff.map(m => escapeHtml(m.name) + ' (' + escapeHtml(m.role.toLowerCase()) + ')').join(', ') + '</p>'
       : '') +
     (team.tophaandbold && team.tophaandbold.team
-      ? '<div class="tp-team-stats" data-team-id="' + escapeHtml(team.id) + '"></div>'
+      ? '<div class="tp-team-eff"></div>'
       : '') +
     (isAdmin
       ? '<div class="btn-row">' +
@@ -1234,14 +1255,14 @@ function attachTeamEditHandlers() {
   });
 
   document.querySelectorAll('.player-tile').forEach(tile => {
-    tile.addEventListener('click', (e) => {
+    tile.addEventListener('click', async (e) => {
       e.stopPropagation();
       const card = tile.closest('.card');
       const teamId = card.dataset.id;
       const idx = parseInt(tile.dataset.idx, 10);
       if (currentPlayerContext && isPlayerPanelOpen() &&
           currentPlayerContext.teamId === teamId && currentPlayerContext.idx === idx) return;
-      if (!confirmLeavePlayerDetail()) return;
+      if (!(await confirmLeavePlayerDetail())) return;
       openPlayerDetail(teamId, idx);
     });
   });
@@ -1298,6 +1319,15 @@ function openPlayerDetail(teamId, idx) {
     player.height ? player.height + ' cm' : '',
     player.nationality
   ].filter(Boolean).join(' · ');
+  const photoEl = document.getElementById('playerDetailPhoto');
+  if (player.photo) {
+    photoEl.src = player.photo;
+    photoEl.classList.add('has-photo');
+    photoEl.onerror = () => photoEl.classList.remove('has-photo');
+  } else {
+    photoEl.removeAttribute('src');
+    photoEl.classList.remove('has-photo');
+  }
   loadPlayerStats(team, player);
   document.getElementById('playerStrengthsInput').value = player.strengths || '';
   document.getElementById('playerWeaknessesInput').value = player.weaknesses || '';
@@ -1334,8 +1364,26 @@ function isPlayerPanelOpen() {
 function playerDetailIsDirty() {
   return isAdmin && isPlayerPanelOpen() && currentPlayerFormState() !== playerDetailSnapshot;
 }
+// Spør hva som skal skje med ulagrede endringer. Gir true hvis det er greit å gå videre.
 function confirmLeavePlayerDetail() {
-  return !playerDetailIsDirty() || confirm('Du har endringer på denne spilleren som ikke er lagret. Forkaste dem?');
+  if (!playerDetailIsDirty()) return Promise.resolve(true);
+  const team = teams.find(t => t.id === currentPlayerContext.teamId);
+  const player = team && team.players[currentPlayerContext.idx];
+  document.getElementById('unsavedPlayerText').textContent =
+    'Du har endret ' + ((player && player.name) || 'spilleren') + ' uten å lagre. Vil du lagre endringene eller forkaste dem?';
+  const modal = document.getElementById('unsavedPlayerModal');
+  modal.classList.add('show');
+  return new Promise(resolve => {
+    const done = async (choice) => {
+      modal.classList.remove('show');
+      ['unsavedCancelBtn', 'unsavedDiscardBtn', 'unsavedSaveBtn'].forEach(id => { document.getElementById(id).onclick = null; });
+      if (choice === 'save') { await savePlayerDetail(); resolve(true); }
+      else resolve(choice === 'discard');
+    };
+    document.getElementById('unsavedCancelBtn').onclick = () => done('cancel');
+    document.getElementById('unsavedDiscardBtn').onclick = () => done('discard');
+    document.getElementById('unsavedSaveBtn').onclick = () => done('save');
+  });
 }
 function closePlayerDetail() {
   document.getElementById('playerDetailModal').classList.remove('show');
@@ -1350,15 +1398,17 @@ function markSelectedPlayerTile() {
   const tile = card && card.querySelector('.player-tile[data-idx="' + currentPlayerContext.idx + '"]');
   if (tile) tile.classList.add('selected');
 }
-document.getElementById('closePlayerDetailBtn').addEventListener('click', () => {
-  if (confirmLeavePlayerDetail()) closePlayerDetail();
+document.getElementById('closePlayerDetailBtn').addEventListener('click', async () => {
+  if (await confirmLeavePlayerDetail()) closePlayerDetail();
 });
-document.getElementById('playerDetailModal').addEventListener('click', (e) => {
+document.getElementById('playerDetailModal').addEventListener('click', async (e) => {
   // Klikk på den mørke bakgrunnen (mobil) lukker popupen
-  if (e.target.id === 'playerDetailModal' && confirmLeavePlayerDetail()) closePlayerDetail();
+  if (e.target.id === 'playerDetailModal' && await confirmLeavePlayerDetail()) closePlayerDetail();
 });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && isPlayerPanelOpen() && confirmLeavePlayerDetail()) closePlayerDetail();
+document.addEventListener('keydown', async (e) => {
+  if (e.key !== 'Escape' || !isPlayerPanelOpen()) return;
+  if (document.getElementById('unsavedPlayerModal').classList.contains('show')) return;
+  if (await confirmLeavePlayerDetail()) closePlayerDetail();
 });
 
 document.getElementById('keyPlayerToggle').addEventListener('click', () => {
@@ -1367,11 +1417,11 @@ document.getElementById('keyPlayerToggle').addEventListener('click', () => {
   document.getElementById('keyPlayerToggle').classList.toggle('on', keyPlayerToggleState);
 });
 
-document.getElementById('cancelPlayerDetailBtn').addEventListener('click', () => {
-  if (confirmLeavePlayerDetail()) closePlayerDetail();
+document.getElementById('cancelPlayerDetailBtn').addEventListener('click', async () => {
+  if (await confirmLeavePlayerDetail()) closePlayerDetail();
 });
 
-document.getElementById('savePlayerDetailBtn').addEventListener('click', async () => {
+async function savePlayerDetail() {
   if (!currentPlayerContext) return;
   const { teamId, idx } = currentPlayerContext;
   const team = teams.find(t => t.id === teamId);
@@ -1382,9 +1432,13 @@ document.getElementById('savePlayerDetailBtn').addEventListener('click', async (
   player.keyPlayer = keyPlayerToggleState;
   await DataStore.saveTeams(teams);
   playerDetailSnapshot = currentPlayerFormState();
-  if (!window.matchMedia('(min-width: 901px)').matches) closePlayerDetail(); // mobil: lukk popupen
   renderTeams();
   showTeamSaveStatus(teamId, (player.name || 'Spiller') + ' lagret ✓');
+}
+
+document.getElementById('savePlayerDetailBtn').addEventListener('click', async () => {
+  await savePlayerDetail();
+  if (!window.matchMedia('(min-width: 901px)').matches) closePlayerDetail(); // mobil: lukk popupen
 });
 
 document.getElementById('deletePlayerBtn').addEventListener('click', async () => {
@@ -1781,16 +1835,17 @@ function renderTeamStats(data, team) {
   ];
   const eff = (g['Effektivitet fra'] || []).slice().sort((a, b) => (b.percent || 0) - (a.percent || 0));
   const tp = team.tophaandbold;
-  return '<p class="tp-head">Statistikk denne sesongen</p>' +
+  const top = '<p class="tp-head">Statistikk denne sesongen</p>' +
     '<div class="tp-kpis">' + kpis.map(([l, v]) =>
-      '<div class="tp-kpi"><div class="k-val">' + escapeHtml(v) + '</div><div class="k-lbl">' + escapeHtml(l) + '</div></div>').join('') + '</div>' +
-    (eff.length
+      '<div class="tp-kpi"><div class="k-val">' + escapeHtml(v) + '</div><div class="k-lbl">' + escapeHtml(l) + '</div></div>').join('') + '</div>';
+  const bottom = (eff.length
       ? '<p class="tp-head">Skuddeffektivitet per posisjon</p><div class="tp-bars">' + eff.map(e =>
           '<div class="bar-row"><span>' + escapeHtml(e.label) + '</span><div class="bar"><span style="width:' +
           Math.max(0, Math.min(100, e.percent || 0)) + '%"></span></div><span class="bar-val">' + fmtNum(e.percent) + ' %</span></div>').join('') + '</div>'
       : '') +
     '<p class="tp-source">Kilde: Tophåndbold' + (shots ? ' · ' + fmtNum(shots.value) + ' skudd totalt' : '') +
     (tp.teamPageUrl ? ' · <a href="' + escapeHtml(tp.teamPageUrl) + '" target="_blank" rel="noopener">lagside</a>' : '') + '</p>';
+  return { top, bottom };
 }
 
 async function loadOpenTeamStats() {
@@ -1799,10 +1854,13 @@ async function loadOpenTeamStats() {
   const team = teams.find(t => t.id === el.dataset.teamId);
   if (!team || !team.tophaandbold) return;
   const tp = team.tophaandbold;
+  const effEl = el.closest('.card').querySelector('.tp-team-eff');
   el.innerHTML = '<p class="empty">Henter statistikk fra Tophåndbold…</p>';
   try {
     const data = await tpFetch({ type: 'team', year: tp.year, league: tp.league, team: tp.team });
-    if (el.isConnected) el.innerHTML = renderTeamStats(data, team);
+    const parts = renderTeamStats(data, team);
+    if (el.isConnected) el.innerHTML = parts.top;
+    if (effEl && effEl.isConnected) effEl.innerHTML = parts.bottom;
   } catch (err) {
     if (el.isConnected) el.innerHTML = '<p class="empty">Kunne ikke hente statistikk akkurat nå.</p>';
   }
